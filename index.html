@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>VELTIS — Запись на массаж</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0a0d14;--surface:#111520;--card:#161b28;--border:#1e2535;
+  --gold:#c9a84c;--gold2:#f5d78e;--gold3:#8a6a1e;
+  --text:#e8eaf0;--muted:#6b7280;--green:#22c55e;--red:#ef4444;
+  --blue:#3b82f6;
+}
+body{font-family:-apple-system,'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:80px}
+
+/* VIEWS */
+.view{display:none}
+.view.active{display:block}
+
+/* HEADER */
+.hdr{padding:20px 16px 0;text-align:center}
+.logo{font-size:28px;font-weight:800;letter-spacing:2px;background:linear-gradient(135deg,var(--gold),var(--gold2),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.logo-sub{font-size:11px;letter-spacing:4px;color:var(--muted);text-transform:uppercase;margin-top:2px}
+.gold-line{width:40px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:12px auto}
+
+/* CALENDAR */
+.cal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 16px 8px}
+.cal-title{font-size:16px;font-weight:700}
+.cal-nav{width:36px;height:36px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;padding:0 12px 12px}
+.cal-day-name{text-align:center;font-size:10px;color:var(--muted);padding:4px 0;text-transform:uppercase}
+.cal-day{aspect-ratio:1;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;border:1px solid transparent;transition:.15s}
+.cal-day .dn{font-size:14px;font-weight:600;line-height:1}
+.cal-day .ds{font-size:8px;margin-top:2px}
+.cal-day.empty{cursor:default;opacity:0}
+.cal-day.past{opacity:0.3;cursor:not-allowed}
+.cal-day.today{border-color:var(--gold);background:rgba(201,168,76,0.08)}
+.cal-day.today .dn{color:var(--gold)}
+.cal-day.free{background:var(--card)}
+.cal-day.free:hover{border-color:var(--green);background:rgba(34,197,94,0.08)}
+.cal-day.free .ds{color:var(--green)}
+.cal-day.busy{background:rgba(239,68,68,0.08)}
+.cal-day.busy .ds{color:var(--red)}
+.cal-day.full{opacity:0.5;cursor:not-allowed}
+.cal-day.selected{border-color:var(--gold);background:rgba(201,168,76,0.15)}
+.cal-day.closed{opacity:0.4;cursor:not-allowed}
+.cal-day.closed .ds{color:var(--muted)}
+
+/* LEGEND */
+.legend{display:flex;gap:12px;padding:0 16px 16px;flex-wrap:wrap}
+.leg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)}
+.leg-dot{width:8px;height:8px;border-radius:50%}
+
+/* TIME SLOTS */
+.section{padding:0 16px;margin-bottom:16px}
+.sec-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:10px}
+.slots{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.slot{padding:10px 4px;border-radius:12px;border:1px solid var(--border);background:var(--card);text-align:center;cursor:pointer;transition:.15s}
+.slot .st{font-size:14px;font-weight:700}
+.slot .sl{font-size:10px;color:var(--muted);margin-top:2px}
+.slot.free{border-color:var(--border)}
+.slot.free:hover{border-color:var(--green);background:rgba(34,197,94,0.08)}
+.slot.free .sl{color:var(--green)}
+.slot.busy{opacity:0.4;cursor:not-allowed;background:rgba(239,68,68,0.05)}
+.slot.busy .sl{color:var(--red)}
+.slot.selected{border-color:var(--gold);background:rgba(201,168,76,0.12)}
+.slot.selected .st{color:var(--gold)}
+
+/* FORM */
+.form-card{background:var(--card);border-radius:16px;padding:16px;border:1px solid var(--border);margin:0 16px 16px}
+.fg{margin-bottom:14px}
+.fg label{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px}
+.fg input,.fg select,.fg textarea{width:100%;padding:12px;border-radius:12px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-size:15px;font-family:inherit;outline:none;transition:.15s}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--gold)}
+.fg textarea{resize:none;height:80px}
+.booking-summary{background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.3);border-radius:14px;padding:14px;margin:0 16px 16px}
+.bs-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0}
+.bs-label{font-size:12px;color:var(--muted)}
+.bs-val{font-size:13px;font-weight:700;color:var(--gold)}
+
+/* BUTTONS */
+.btn{width:100%;padding:15px;border-radius:14px;border:none;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s;margin-bottom:10px}
+.btn-gold{background:linear-gradient(135deg,var(--gold3),var(--gold),var(--gold2));color:#0a0d14}
+.btn-gold:hover{opacity:0.9}
+.btn-outline{background:none;border:1.5px solid var(--border);color:var(--text)}
+.btn-outline:hover{border-color:var(--gold);color:var(--gold)}
+.btn-wrap{padding:0 16px}
+
+/* SUCCESS */
+.success-card{text-align:center;padding:40px 20px}
+.success-ico{font-size:64px;margin-bottom:16px}
+.success-title{font-size:22px;font-weight:800;color:var(--gold);margin-bottom:8px}
+.success-sub{font-size:14px;color:var(--muted);line-height:1.6}
+.success-box{background:var(--card);border-radius:16px;padding:16px;margin:20px 16px;border:1px solid rgba(201,168,76,0.3)}
+.success-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px}
+.success-row:last-child{border:none}
+
+/* BOTTOM NAV */
+.bnav{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);display:flex;z-index:50}
+.bnb{flex:1;padding:10px 4px 8px;border:none;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--muted);font-family:inherit;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px}
+.bnb.on{color:var(--gold)}
+.bnb .bi{font-size:20px}
+
+/* ADMIN */
+.admin-card{background:var(--card);border-radius:16px;padding:16px;border:1px solid var(--border);margin:0 16px 12px}
+.admin-title{font-size:13px;font-weight:700;margin-bottom:12px;color:var(--gold)}
+.schedule-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)}
+.schedule-row:last-child{border:none}
+.sch-day{font-size:13px;font-weight:600;flex:1}
+.sch-time{font-size:12px;color:var(--muted);flex:2;text-align:center}
+.toggle{width:44px;height:24px;border-radius:12px;border:none;cursor:pointer;position:relative;transition:.3s;flex-shrink:0}
+.toggle.on{background:var(--gold)}
+.toggle.off{background:var(--border)}
+.toggle::after{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:white;top:3px;transition:.3s}
+.toggle.on::after{left:23px}
+.toggle.off::after{left:3px}
+.time-input{background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:4px 8px;font-size:12px;width:60px;text-align:center}
+.bookings-list{padding:0 16px}
+.booking-item{background:var(--card);border-radius:14px;padding:12px 14px;margin-bottom:8px;border:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.bi-info{flex:1}
+.bi-name{font-size:14px;font-weight:700}
+.bi-detail{font-size:11px;color:var(--muted);margin-top:2px}
+.bi-status{font-size:11px;padding:4px 10px;border-radius:20px;font-weight:700}
+.bi-status.new{background:rgba(201,168,76,0.15);color:var(--gold)}
+.bi-status.done{background:rgba(34,197,94,0.15);color:var(--green)}
+.bi-cancel{background:none;border:none;color:var(--red);font-size:16px;cursor:pointer;padding:4px}
+.empty-state{text-align:center;padding:40px 20px;color:var(--muted)}
+.empty-ico{font-size:40px;display:block;margin-bottom:10px}
+
+/* ADMIN PASSWORD */
+.admin-lock{text-align:center;padding:60px 20px}
+.lock-ico{font-size:48px;margin-bottom:16px}
+.lock-title{font-size:18px;font-weight:700;margin-bottom:20px}
+.lock-input{width:100%;max-width:200px;padding:14px;border-radius:14px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-size:24px;text-align:center;letter-spacing:8px;outline:none;font-family:inherit}
+.lock-input:focus{border-color:var(--gold)}
+.lock-btn{margin-top:16px;padding:12px 32px;border-radius:12px;background:var(--gold);color:#0a0d14;border:none;font-weight:700;font-size:15px;cursor:pointer;font-family:inherit}
+.lock-err{color:var(--red);font-size:12px;margin-top:10px;min-height:18px}
+</style>
+</head>
+<body>
+
+<!-- VIEW: ЗАПИСЬ -->
+<div id="view-book" class="view active">
+  <div class="hdr">
+    <div class="logo" onclick="secretTap()" style="cursor:default;user-select:none">VELTIS</div>
+    <div class="logo-sub">массаж и оздоровление</div>
+    <div class="gold-line"></div>
+  </div>
+
+  <!-- CALENDAR -->
+  <div class="cal-header">
+    <button class="cal-nav" onclick="prevMonth()">‹</button>
+    <div class="cal-title" id="calTitle"></div>
+    <button class="cal-nav" onclick="nextMonth()">›</button>
+  </div>
+  <div class="cal-grid" id="calGrid">
+    <div class="cal-day-name">Пн</div><div class="cal-day-name">Вт</div>
+    <div class="cal-day-name">Ср</div><div class="cal-day-name">Чт</div>
+    <div class="cal-day-name">Пт</div><div class="cal-day-name">Сб</div>
+    <div class="cal-day-name">Вс</div>
+  </div>
+  <div class="legend">
+    <div class="leg"><div class="leg-dot" style="background:var(--green)"></div>Есть места</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--red)"></div>Занято</div>
+    <div class="leg"><div class="leg-dot" style="background:var(--muted)"></div>Выходной</div>
+  </div>
+
+  <!-- TIME SLOTS -->
+  <div class="section" id="slotsSection" style="display:none">
+    <div class="sec-title" id="slotsDayTitle">Выберите время</div>
+    <div class="slots" id="slotsGrid"></div>
+  </div>
+
+  <!-- SERVICE SELECT -->
+  <div class="section" id="serviceSection" style="display:none">
+    <div class="sec-title">Услуга</div>
+    <div class="fg">
+      <select id="serviceSelect">
+        <option value="швз|800|30">Массаж ШВЗ — 800 ₽ / 30 мин</option>
+        <option value="спина|1000|45">Массаж спины — 1 000 ₽ / 45 мин</option>
+        <option value="тело|1500|60">Массаж всего тела — 1 500 ₽ / 60 мин</option>
+        <option value="баночный|900|30">Баночный массаж — 900 ₽ / 30 мин</option>
+        <option value="медовый|1200|40">Медовый массаж — 1 200 ₽ / 40 мин</option>
+        <option value="спортивный|1200|45">Спортивный — 1 200 ₽ / 45 мин</option>
+        <option value="классический|1000|45">Классический — 1 000 ₽ / 45 мин</option>
+      </select>
+    </div>
+  </div>
+
+  <div id="formSection" style="display:none">
+    <div class="booking-summary" id="bookingSummary"></div>
+    <div class="form-card">
+      <div class="fg"><label>Ваше имя</label><input type="text" id="clientName" placeholder="Как вас зовут?"></div>
+      <div class="fg"><label>Телефон</label><input type="tel" id="clientPhone" placeholder="+7 ___  ___ __ __"></div>
+      <div class="fg"><label>Комментарий (необязательно)</label><textarea id="clientComment" placeholder="Что беспокоит, пожелания..."></textarea></div>
+    </div>
+    <div class="btn-wrap">
+      <button class="btn btn-gold" onclick="submitBooking()">Записаться</button>
+      <button class="btn btn-outline" onclick="resetBooking()">Начать сначала</button>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW: SUCCESS -->
+<div id="view-success" class="view">
+  <div class="success-card">
+    <div class="success-ico">✨</div>
+    <div class="success-title">Запись принята!</div>
+    <div class="success-sub">Александр свяжется с вами для подтверждения.<br>Обычно в течение 1-2 часов.</div>
+  </div>
+  <div class="success-box" id="successBox"></div>
+  <div class="btn-wrap">
+    <button class="btn btn-gold" onclick="newBooking()">Записаться ещё раз</button>
+  </div>
+</div>
+
+<!-- VIEW: О НАС -->
+<div id="view-info" class="view">
+  <div class="hdr">
+    <div class="logo">VELTIS</div>
+    <div class="logo-sub">массаж и оздоровление</div>
+    <div class="gold-line"></div>
+  </div>
+  <div class="section" style="margin-top:8px">
+    <div class="admin-card">
+      <div class="admin-title">👤 Специалист</div>
+      <p id="specialistInfo" style="font-size:13px;line-height:1.7;color:var(--muted)"></p>
+    </div>
+    <div class="admin-card">
+      <div class="admin-title">💆 Услуги</div>
+      <div id="servicesList"></div>
+    </div>
+    <div class="admin-card">
+      <div class="admin-title">⏰ График работы</div>
+      <div id="scheduleInfo"></div>
+    </div>
+    <div class="admin-card">
+      <div class="admin-title">📞 Контакты</div>
+      <p id="contactInfo" style="font-size:13px;color:var(--muted);line-height:1.8"></p>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW: ADMIN -->
+<div id="view-admin" class="view">
+  <div id="adminLock">
+    <div class="admin-lock">
+      <div class="lock-ico">🔐</div>
+      <div class="lock-title">Панель администратора</div>
+      <input class="lock-input" id="adminPass" type="password" maxlength="8" placeholder="••••••••" onkeyup="if(event.key==='Enter')checkAdmin()">
+      <br><button class="lock-btn" onclick="checkAdmin()">Войти</button>
+      <div class="lock-err" id="lockErr"></div>
+    </div>
+  </div>
+
+  <div id="adminPanel" style="display:none">
+    <div style="padding:16px 16px 8px;display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:18px;font-weight:800;color:var(--gold)">Управление</div>
+      <button onclick="lockAdmin()" style="background:none;border:1px solid var(--border);color:var(--muted);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-family:inherit">Выйти</button>
+    </div>
+
+    <!-- ПРАЙС -->
+    <div class="admin-card">
+      <div class="admin-title">💰 Редактировать прайс</div>
+      <div id="priceEditor"></div>
+      <button class="btn btn-gold" style="margin-top:12px" onclick="savePrices()">Сохранить прайс</button>
+    </div>
+
+    <!-- О НАС -->
+    <div class="admin-card" style="margin-top:4px">
+      <div class="admin-title">📝 Редактировать «О нас»</div>
+      <div class="fg"><label>Имя специалиста</label><input type="text" id="editName" placeholder="Ширяев Александр"></div>
+      <div class="fg"><label>Описание / Диплом</label><textarea id="editDesc" style="height:100px;width:100%;padding:10px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-family:inherit;font-size:14px;outline:none;resize:none" placeholder="Диплом, специализация..."></textarea></div>
+      <div class="fg"><label>Адрес / Район</label><input type="text" id="editAddr" placeholder="Нахабино, ЖК Малина и ближайшие районы"></div>
+      <div class="fg"><label>Телефон</label><input type="text" id="editPhone" placeholder="8 925 079-08-61"></div>
+      <button class="btn btn-gold" onclick="saveAbout()">Сохранить</button>
+    </div>
+
+    <!-- РАСПИСАНИЕ -->
+    <div class="admin-card">
+      <div class="admin-title">⏰ Расписание приёма</div>
+      <div id="scheduleEditor"></div>
+      <button class="btn btn-gold" style="margin-top:12px" onclick="saveSchedule()">Сохранить расписание</button>
+    </div>
+
+    <!-- ЗАПИСИ -->
+    <div style="padding:0 16px 8px">
+      <div class="sec-title">Предстоящие записи</div>
+    </div>
+    <div class="bookings-list" id="adminBookings"></div>
+
+    <!-- ЗАБЛОКИРОВАННЫЕ ДАТЫ -->
+    <div class="admin-card">
+      <div class="admin-title">🚫 Заблокировать дату</div>
+      <div class="fg"><input type="date" id="blockDate"></div>
+      <div class="fg">
+        <select id="blockType">
+          <option value="full">Весь день (выходной)</option>
+          <option value="morning">Только утро</option>
+          <option value="evening">Только вечер</option>
+        </select>
+      </div>
+      <button class="btn btn-outline" onclick="blockDate()">Заблокировать</button>
+      <div id="blockedList" style="margin-top:8px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bnav">
+  <button class="bnb on" id="bn-book" onclick="goView('book')"><span class="bi">📅</span>Запись</button>
+  <button class="bnb" id="bn-info" onclick="goView('info')"><span class="bi">💆</span>О нас</button>
+</div>
+
+<script>
+// ══════════════════════════════════════
+// ДАННЫЕ
+// ══════════════════════════════════════
+var ADMIN_PASS = '19130415';
+var adminUnlocked = false;
+
+// Расписание по умолчанию
+var defaultSchedule = {
+  0: {on: true,  label: 'Воскресенье', from: '10:00', to: '20:00'},
+  1: {on: false, label: 'Понедельник', from: '21:00', to: '23:00'},
+  2: {on: false, label: 'Вторник',     from: '21:00', to: '23:00'},
+  3: {on: false, label: 'Среда',       from: '21:00', to: '23:00'},
+  4: {on: false, label: 'Четверг',     from: '21:00', to: '23:00'},
+  5: {on: false, label: 'Пятница',     from: '21:00', to: '23:00'},
+  6: {on: true,  label: 'Суббота',     from: '21:00', to: '23:00'},
+};
+
+var DEFAULT_SERVICES = [
+  {id:'швз',        name:'Массаж ШВЗ',        price:800,  dur:30},
+  {id:'спина',      name:'Массаж спины',       price:1000, dur:45},
+  {id:'тело',       name:'Массаж всего тела',  price:1500, dur:60},
+  {id:'баночный',   name:'Баночный массаж',    price:900,  dur:30},
+  {id:'медовый',    name:'Медовый массаж',     price:1200, dur:40},
+  {id:'спортивный', name:'Спортивный',         price:1200, dur:45},
+  {id:'классический',name:'Классический',      price:1000, dur:45},
+];
+
+function getServices(){
+  try{return JSON.parse(localStorage.getItem('veltis_services')||'null')||DEFAULT_SERVICES;}
+  catch(e){return DEFAULT_SERVICES;}
+}
+function setServices(s){localStorage.setItem('veltis_services',JSON.stringify(s));}
+
+var SERVICES = getServices();
+
+function getSchedule(){
+  try{return JSON.parse(localStorage.getItem('veltis_schedule')||'null')||defaultSchedule}catch(e){return defaultSchedule}
+}
+function setSchedule(s){localStorage.setItem('veltis_schedule',JSON.stringify(s))}
+function getBookings(){try{return JSON.parse(localStorage.getItem('veltis_bookings')||'[]')}catch(e){return[]}}
+function setBookings(b){localStorage.setItem('veltis_bookings',JSON.stringify(b))}
+function getBlocked(){try{return JSON.parse(localStorage.getItem('veltis_blocked')||'{}')}catch(e){return{}}}
+function setBlocked(b){localStorage.setItem('veltis_blocked',JSON.stringify(b))}
+
+function fmt(n){return n.toLocaleString('ru')+'  ₽'}
+
+// ══════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════
+var _tapCount = 0;
+var _tapTimer = null;
+
+function secretTap(){
+  _tapCount++;
+  clearTimeout(_tapTimer);
+  if(_tapCount >= 5){
+    _tapCount = 0;
+    goView('admin');
+  } else {
+    _tapTimer = setTimeout(function(){ _tapCount = 0; }, 1500);
+  }
+}
+
+function goView(v){
+  document.querySelectorAll('.view').forEach(function(el){el.classList.remove('active')});
+  document.querySelectorAll('.bnb').forEach(function(b){b.classList.remove('on')});
+  document.getElementById('view-'+v).classList.add('active');
+  var bn = document.getElementById('bn-'+v);
+  if(bn) bn.classList.add('on');
+  if(v==='info') renderInfo();
+  if(v==='admin') renderAdmin();
+  if(v==='book') renderCal();
+}
+
+// ══════════════════════════════════════
+// CALENDAR
+// ══════════════════════════════════════
+var curYear = new Date().getFullYear();
+var curMonth = new Date().getMonth();
+var selDate = null;
+var selSlot = null;
+
+var MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+
+function prevMonth(){if(curMonth===0){curMonth=11;curYear--}else{curMonth--};renderCal()}
+function nextMonth(){if(curMonth===11){curMonth=0;curYear++}else{curMonth++};renderCal()}
+
+function renderCal(){
+  document.getElementById('calTitle').textContent = MONTHS[curMonth]+' '+curYear;
+  var grid = document.getElementById('calGrid');
+  // Remove day cells (keep headers)
+  while(grid.children.length > 7) grid.removeChild(grid.lastChild);
+
+  var sched = getSchedule();
+  var bookings = getBookings();
+  var blocked = getBlocked();
+  var today = new Date(); today.setHours(0,0,0,0);
+
+  var first = new Date(curYear, curMonth, 1);
+  var startDow = (first.getDay()+6)%7; // Mon=0
+  var daysInMonth = new Date(curYear, curMonth+1, 0).getDate();
+
+  for(var i=0;i<startDow;i++){
+    var e=document.createElement('div');e.className='cal-day empty';grid.appendChild(e);
+  }
+
+  for(var d=1;d<=daysInMonth;d++){
+    var date = new Date(curYear, curMonth, d);
+    var dow = date.getDay(); // 0=Sun
+    var dateStr = date.toISOString().slice(0,10);
+    var dayEl = document.createElement('div');
+    dayEl.className = 'cal-day';
+
+    var isPast = date < today;
+    var isToday = date.getTime() === today.getTime();
+    var schedDay = sched[dow];
+    var isOpen = schedDay && schedDay.on;
+    var isBlocked = blocked[dateStr];
+
+    var slots = getDaySlots(dateStr, dow);
+    var dayBookings = bookings.filter(function(b){return b.date===dateStr && b.status!=='cancelled'});
+    var freeSlots = slots.filter(function(sl){
+      return !dayBookings.some(function(b){return b.time===sl});
+    });
+
+    var cls = '';
+    var status = '';
+    if(isPast){cls='past'}
+    else if(!isOpen||isBlocked){cls='closed';status='выходной'}
+    else if(freeSlots.length===0){cls='full busy';status='занято'}
+    else if(freeSlots.length<=2){cls='busy';status=freeSlots.length+' мест'}
+    else{cls='free';status='свободно'}
+
+    if(isToday) cls+=' today';
+    if(selDate===dateStr) cls+=' selected';
+
+    dayEl.className='cal-day '+cls;
+    dayEl.innerHTML='<span class="dn">'+d+'</span><span class="ds">'+status+'</span>';
+
+    if(!isPast&&isOpen&&!isBlocked&&freeSlots.length>0){
+      (function(ds,dw){
+        dayEl.addEventListener('click',function(){selectDate(ds,dw)});
+      })(dateStr,dow);
+    }
+    grid.appendChild(dayEl);
+  }
+}
+
+function getDaySlots(dateStr, dow){
+  var sched = getSchedule();
+  var day = sched[dow];
+  if(!day||!day.on) return[];
+  var slots=[];
+  var from=timeToMins(day.from);
+  var to=timeToMins(day.to);
+  for(var m=from;m+60<=to;m+=60){
+    slots.push(minsToTime(m));
+  }
+  return slots;
+}
+
+function timeToMins(t){var p=t.split(':');return parseInt(p[0])*60+parseInt(p[1])}
+function minsToTime(m){var h=Math.floor(m/60);var mn=m%60;return (h<10?'0':'')+h+':'+(mn<10?'0':'')+mn}
+
+function selectDate(dateStr, dow){
+  selDate=dateStr;
+  selSlot=null;
+  renderCal();
+  renderSlots(dateStr, dow);
+}
+
+function renderSlots(dateStr, dow){
+  var slots = getDaySlots(dateStr, dow);
+  var bookings = getBookings();
+  var dayBookings = bookings.filter(function(b){return b.date===dateStr&&b.status!=='cancelled'});
+
+  var d = new Date(dateStr);
+  var dayNames=['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
+  document.getElementById('slotsDayTitle').textContent = dayNames[d.getDay()]+', '+d.getDate()+' '+MONTHS[d.getMonth()].toLowerCase();
+
+  var grid = document.getElementById('slotsGrid');
+  grid.innerHTML='';
+  slots.forEach(function(sl){
+    var isBusy = dayBookings.some(function(b){return b.time===sl});
+    var el = document.createElement('div');
+    el.className='slot '+(isBusy?'busy':'free')+(selSlot===sl?' selected':'');
+    el.innerHTML='<div class="st">'+sl+'</div><div class="sl">'+(isBusy?'занято':'свободно')+'</div>';
+    if(!isBusy){
+      el.addEventListener('click',function(){selectSlot(sl)});
+    }
+    grid.appendChild(el);
+  });
+
+  document.getElementById('slotsSection').style.display='block';
+  document.getElementById('serviceSection').style.display=selSlot?'block':'none';
+  document.getElementById('formSection').style.display='none';
+  slotsSection.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function selectSlot(sl){
+  selSlot=sl;
+  document.querySelectorAll('.slot').forEach(function(el){el.classList.remove('selected')});
+  event.currentTarget.classList.add('selected');
+  document.getElementById('serviceSection').style.display='block';
+  document.getElementById('formSection').style.display='block';
+  renderSummary();
+  document.getElementById('formSection').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function renderSummary(){
+  var sel = document.getElementById('serviceSelect').value.split('|');
+  var d = new Date(selDate);
+  var dayNames=['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+  document.getElementById('bookingSummary').innerHTML=
+    '<div class="bs-row"><span class="bs-label">Дата</span><span class="bs-val">'+dayNames[d.getDay()]+', '+d.getDate()+' '+MONTHS[d.getMonth()].toLowerCase()+'</span></div>'+
+    '<div class="bs-row"><span class="bs-label">Время</span><span class="bs-val">'+selSlot+'</span></div>'+
+    '<div class="bs-row"><span class="bs-label">Услуга</span><span class="bs-val">'+sel[0]+'</span></div>'+
+    '<div class="bs-row"><span class="bs-label">Длительность</span><span class="bs-val">'+sel[2]+' мин</span></div>'+
+    '<div class="bs-row"><span class="bs-label">Стоимость</span><span class="bs-val">'+sel[1]+' ₽</span></div>';
+}
+
+document.getElementById('serviceSelect').addEventListener('change', renderSummary);
+
+var TG_TOKEN = '8804005529:AAEC5_5oTGbqySKkeowX744E4OJAv09U--8';
+var TG_CHAT  = '730279656';
+
+function sendTgNotify(text){
+  fetch('https://api.telegram.org/bot'+TG_TOKEN+'/sendMessage',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({chat_id:TG_CHAT, text:text, parse_mode:'HTML'})
+  }).catch(function(){});
+}
+
+function submitBooking(){
+  var name = document.getElementById('clientName').value.trim();
+  var phone = document.getElementById('clientPhone').value.trim();
+  var comment = document.getElementById('clientComment').value.trim();
+  if(!name||!phone){alert('Заполните имя и телефон');return}
+  if(!selDate||!selSlot){alert('Выберите дату и время');return}
+
+  var sel = document.getElementById('serviceSelect').value.split('|');
+  var booking = {
+    id: Date.now(),
+    date: selDate,
+    time: selSlot,
+    service: sel[0],
+    price: sel[1],
+    duration: sel[2],
+    name: name,
+    phone: phone,
+    comment: comment,
+    status: 'new',
+    created: new Date().toLocaleString('ru-RU')
+  };
+
+  var bookings = getBookings();
+  bookings.push(booking);
+  setBookings(bookings);
+
+  // Уведомление в Telegram
+  var d = new Date(selDate);
+  var dayNames2=['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
+  var msg =
+    '🔔 <b>Новая запись!</b>\n\n'+
+    '👤 <b>'+name+'</b>\n'+
+    '📞 '+phone+'\n'+
+    '📅 '+dayNames2[d.getDay()]+', '+d.getDate()+' '+MONTHS[d.getMonth()]+'\n'+
+    '⏰ '+selSlot+'\n'+
+    '💆 '+sel[0]+' — '+sel[1]+' ₽ / '+sel[2]+' мин'+
+    (comment?'\n💬 '+comment:'');
+  sendTgNotify(msg);
+
+  var d = new Date(selDate);
+  var dayNames=['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
+  document.getElementById('successBox').innerHTML=
+    '<div class="success-row"><span style="color:var(--muted)">Имя</span><span>'+name+'</span></div>'+
+    '<div class="success-row"><span style="color:var(--muted)">Дата</span><span>'+dayNames[d.getDay()]+', '+d.getDate()+' '+MONTHS[d.getMonth()]+'</span></div>'+
+    '<div class="success-row"><span style="color:var(--muted)">Время</span><span>'+selSlot+'</span></div>'+
+    '<div class="success-row"><span style="color:var(--muted)">Услуга</span><span>'+sel[0]+'</span></div>'+
+    '<div class="success-row"><span style="color:var(--muted)">Стоимость</span><span style="color:var(--gold);font-weight:700">'+sel[1]+' ₽</span></div>';
+
+  document.querySelectorAll('.view').forEach(function(el){el.classList.remove('active')});
+  document.getElementById('view-success').classList.add('active');
+}
+
+function resetBooking(){
+  selDate=null;selSlot=null;
+  document.getElementById('slotsSection').style.display='none';
+  document.getElementById('serviceSection').style.display='none';
+  document.getElementById('formSection').style.display='none';
+  document.getElementById('clientName').value='';
+  document.getElementById('clientPhone').value='';
+  document.getElementById('clientComment').value='';
+  renderCal();
+}
+
+function newBooking(){
+  resetBooking();
+  goView('book');
+}
+
+// ══════════════════════════════════════
+// ABOUT
+// ══════════════════════════════════════
+function getAbout(){
+  try{
+    return JSON.parse(localStorage.getItem('veltis_about')||'null')||{
+      name:'Ширяев Александр',
+      desc:'Диплом МИРК им. З.М. Никифоровой — «Методики и техники оздоровительного массажа», 288 часов, 2026 г.\n\nСтудент специальности «Физическая реабилитация».\n\nВыезд на дом — Нахабино, ЖК Малина и ближайшие районы.',
+      addr:'Нахабино, ЖК Малина и ближайшие районы',
+      phone:'8 925 079-08-61'
+    };
+  }catch(e){return{name:'',desc:'',addr:'',phone:''};}
+}
+function saveAbout(){
+  var about={
+    name:document.getElementById('editName').value.trim()||'Ширяев Александр',
+    desc:document.getElementById('editDesc').value.trim(),
+    addr:document.getElementById('editAddr').value.trim(),
+    phone:document.getElementById('editPhone').value.trim()
+  };
+  localStorage.setItem('veltis_about',JSON.stringify(about));
+  alert('Сохранено!');
+  renderInfo();
+}
+function loadAboutEditor(){
+  var a=getAbout();
+  var n=document.getElementById('editName');
+  var d=document.getElementById('editDesc');
+  var ad=document.getElementById('editAddr');
+  var ph=document.getElementById('editPhone');
+  if(n)n.value=a.name||'';
+  if(d)d.value=a.desc||'';
+  if(ad)ad.value=a.addr||'';
+  if(ph)ph.value=a.phone||'';
+}
+
+// INFO
+// ══════════════════════════════════════
+function renderInfo(){
+  var a=getAbout();
+  var specEl=document.getElementById('specialistInfo');
+  if(specEl) specEl.innerHTML='<strong style="color:var(--text)">'+a.name+'</strong><br><br>'+
+    (a.desc||'').replace(/\n/g,'<br>')+'<br><br>'+
+    (a.addr?'📍 '+a.addr:'');
+
+  var contEl=document.getElementById('contactInfo');
+  if(contEl) contEl.innerHTML='Телефон: <strong style="color:var(--text)">'+(a.phone||'8 925 079-08-61')+'</strong><br>Запись: через это приложение или в личку Telegram';
+
+  var sched = getSchedule();
+  var schedHtml='';
+  [1,2,3,4,5,6,0].forEach(function(d){
+    var s=sched[d];
+    schedHtml+='<div class="schedule-row"><span class="sch-day">'+s.label+'</span>'+
+      '<span class="sch-time" style="color:'+(s.on?'var(--text)':'var(--muted)')+'">'+
+      (s.on?s.from+' — '+s.to:'выходной')+'</span></div>';
+  });
+  document.getElementById('scheduleInfo').innerHTML=schedHtml;
+
+  var svcsHtml=SERVICES.map(function(sv){
+    return '<div class="schedule-row"><span class="sch-day" style="font-size:13px">'+sv.name+'</span>'+
+      '<span style="font-size:12px;color:var(--gold);font-weight:700">'+sv.price+' ₽ / '+sv.dur+' мин</span></div>';
+  }).join('');
+  document.getElementById('servicesList').innerHTML=svcsHtml;
+}
+
+// ══════════════════════════════════════
+// ADMIN
+// ══════════════════════════════════════
+function checkAdmin(){
+  var pass = document.getElementById('adminPass').value;
+  if(pass===ADMIN_PASS){
+    adminUnlocked=true;
+    document.getElementById('adminLock').style.display='none';
+    document.getElementById('adminPanel').style.display='block';
+    loadAboutEditor();
+    renderPriceEditor();
+    renderScheduleEditor();
+    renderAdminBookings();
+    renderBlockedDates();
+  } else {
+    document.getElementById('lockErr').textContent='Неверный пароль';
+    setTimeout(function(){document.getElementById('lockErr').textContent=''},2000);
+    document.getElementById('adminPass').value='';
+  }
+}
+
+function lockAdmin(){
+  adminUnlocked=false;
+  document.getElementById('adminPass').value='';
+  document.getElementById('adminLock').style.display='block';
+  document.getElementById('adminPanel').style.display='none';
+}
+
+function renderAdmin(){
+  if(adminUnlocked){
+    renderScheduleEditor();
+    renderAdminBookings();
+    renderBlockedDates();
+  }
+}
+
+function renderPriceEditor(){
+  var svcs = getServices();
+  var html = svcs.map(function(sv, i){
+    return '<div class="schedule-row" style="flex-wrap:wrap;gap:6px">'+
+      '<span class="sch-day" style="width:100%;font-size:12px;margin-bottom:4px">'+sv.name+'</span>'+
+      '<input class="time-input" id="price_'+i+'" value="'+sv.price+'" type="number" style="width:80px" placeholder="Цена">'+
+      '<span style="font-size:11px;color:var(--muted)">₽</span>'+
+      '<input class="time-input" id="dur_'+i+'" value="'+sv.dur+'" type="number" style="width:60px" placeholder="Мин">'+
+      '<span style="font-size:11px;color:var(--muted)">мин</span>'+
+      '</div>';
+  }).join('');
+  document.getElementById('priceEditor').innerHTML = html;
+}
+
+function savePrices(){
+  var svcs = getServices();
+  svcs.forEach(function(sv, i){
+    var p = document.getElementById('price_'+i);
+    var d = document.getElementById('dur_'+i);
+    if(p) sv.price = parseInt(p.value)||sv.price;
+    if(d) sv.dur   = parseInt(d.value)||sv.dur;
+  });
+  setServices(svcs);
+  SERVICES = svcs;
+  updateServiceSelect();
+  renderInfo();
+  alert('Прайс сохранён!');
+}
+
+function updateServiceSelect(){
+  var sel = document.getElementById('serviceSelect');
+  if(!sel) return;
+  var svcs = getServices();
+  sel.innerHTML = svcs.map(function(sv){
+    return '<option value="'+sv.id+'|'+sv.price+'|'+sv.dur+'">'+sv.name+' — '+sv.price+' ₽ / '+sv.dur+' мин</option>';
+  }).join('');
+}
+
+function renderScheduleEditor(){
+  var sched = getSchedule();
+  var html='';
+  [1,2,3,4,5,6,0].forEach(function(d){
+    var s=sched[d];
+    html+='<div class="schedule-row">'+
+      '<span class="sch-day">'+s.label+'</span>'+
+      '<span class="sch-time">'+
+        '<input class="time-input" id="from_'+d+'" value="'+s.from+'" type="time"> — '+
+        '<input class="time-input" id="to_'+d+'" value="'+s.to+'" type="time">'+
+      '</span>'+
+      '<button class="toggle '+(s.on?'on':'off')+'" id="tog_'+d+'" onclick="toggleDay('+d+')"></button>'+
+      '</div>';
+  });
+  document.getElementById('scheduleEditor').innerHTML=html;
+}
+
+function toggleDay(d){
+  var sched=getSchedule();
+  sched[d].on=!sched[d].on;
+  setSchedule(sched);
+  renderScheduleEditor();
+}
+
+function saveSchedule(){
+  var sched=getSchedule();
+  [0,1,2,3,4,5,6].forEach(function(d){
+    var f=document.getElementById('from_'+d);
+    var t=document.getElementById('to_'+d);
+    if(f&&t){sched[d].from=f.value;sched[d].to=t.value;}
+  });
+  setSchedule(sched);
+  renderCal();
+  alert('Расписание сохранено!');
+}
+
+function renderAdminBookings(){
+  var bookings=getBookings().filter(function(b){return b.status!=='cancelled'});
+  bookings.sort(function(a,b){return a.date>b.date?1:a.date<b.date?-1:a.time>b.time?1:-1});
+  var today=new Date().toISOString().slice(0,10);
+  var upcoming=bookings.filter(function(b){return b.date>=today});
+
+  if(!upcoming.length){
+    document.getElementById('adminBookings').innerHTML='<div class="empty-state"><span class="empty-ico">📋</span>Записей пока нет</div>';
+    return;
+  }
+
+  document.getElementById('adminBookings').innerHTML=upcoming.map(function(b){
+    var d=new Date(b.date);
+    var dayNames=['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+    return '<div class="booking-item">'+
+      '<div class="bi-info">'+
+        '<div class="bi-name">'+b.name+'</div>'+
+        '<div class="bi-detail">'+dayNames[d.getDay()]+' '+d.getDate()+' '+MONTHS[d.getMonth()].slice(0,3)+' · '+b.time+' · '+b.service+' · '+b.price+' ₽</div>'+
+        '<div class="bi-detail">📞 '+b.phone+(b.comment?' · '+b.comment:'')+'</div>'+
+      '</div>'+
+      '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">'+
+        '<span class="bi-status new">Новая</span>'+
+        '<button class="bi-cancel" onclick="cancelBooking('+b.id+')">✕</button>'+
+      '</div>'+
+      '</div>';
+  }).join('');
+}
+
+function cancelBooking(id){
+  if(!confirm('Отменить запись?'))return;
+  var bookings=getBookings();
+  bookings.forEach(function(b){if(b.id===id)b.status='cancelled'});
+  setBookings(bookings);
+  renderAdminBookings();
+  renderCal();
+}
+
+function blockDate(){
+  var date=document.getElementById('blockDate').value;
+  if(!date){alert('Выберите дату');return}
+  var type=document.getElementById('blockType').value;
+  var blocked=getBlocked();
+  blocked[date]=type;
+  setBlocked(blocked);
+  renderBlockedDates();
+  renderCal();
+}
+
+function renderBlockedDates(){
+  var blocked=getBlocked();
+  var keys=Object.keys(blocked).sort();
+  if(!keys.length){document.getElementById('blockedList').innerHTML='';return}
+  document.getElementById('blockedList').innerHTML=keys.map(function(k){
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px">'+
+      '<span>'+k+' — '+blocked[k]+'</span>'+
+      '<button onclick="unblockDate(\''+k+'\')" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:14px">✕</button>'+
+      '</div>';
+  }).join('');
+}
+
+function unblockDate(date){
+  var blocked=getBlocked();
+  delete blocked[date];
+  setBlocked(blocked);
+  renderBlockedDates();
+  renderCal();
+}
+
+// INIT
+updateServiceSelect();
+renderCal();
+</script>
+</body>
+</html>
