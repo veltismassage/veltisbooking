@@ -156,8 +156,11 @@ body{font-family:-apple-system,'Segoe UI',Arial,sans-serif;background:var(--bg);
 <!-- ═══ ЗАПИСЬ ═══ -->
 <div id="view-book" class="view active">
   <div class="hdr">
-    <div class="logo" onclick="secretTap()">VELTIS</div>
-    <div class="logo-sub">массаж и оздоровление</div>
+    <div onclick="secretTap()" style="cursor:default;user-select:none;margin-bottom:2px">
+      <img id="headerLogoImg" src="" alt="" style="display:none;max-height:60px;max-width:200px;object-fit:contain">
+      <div class="logo" id="headerLogo">VELTIS</div>
+    </div>
+    <div class="logo-sub" id="headerSub">массаж и оздоровление</div>
     <div class="gold-line"></div>
   </div>
   <div class="cal-header">
@@ -320,7 +323,21 @@ body{font-family:-apple-system,'Segoe UI',Arial,sans-serif;background:var(--bg);
     <!-- О НАС -->
     <div class="admin-card">
       <div class="admin-title">📝 О нас</div>
-      <div class="fg"><label>Имя</label><input type="text" id="editName"></div>
+      <div class="fg">
+        <label>Логотип (загрузить картинку)</label>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <img id="previewLogo" src="" alt="" style="display:none;height:50px;border-radius:8px;border:1px solid var(--border)">
+          <div style="flex:1">
+            <input type="file" id="logoFile" accept="image/*" onchange="loadLogo(this)" style="display:none">
+            <button onclick="document.getElementById('logoFile').click()" style="padding:10px 14px;border-radius:10px;background:var(--card);border:1.5px solid var(--border);color:var(--text);font-size:13px;cursor:pointer;font-family:inherit;width:100%">Выбрать изображение</button>
+          </div>
+          <button onclick="removeLogo()" style="padding:10px 12px;border-radius:10px;background:none;border:1px solid var(--red);color:var(--red);font-size:12px;cursor:pointer;font-family:inherit">Удалить</button>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px">Если загружено фото — оно заменяет текст. PNG/SVG с прозрачным фоном выглядит лучше.</div>
+      </div>
+      <div class="fg"><label>Или текстовое название</label><input type="text" id="editLogo" placeholder="VELTIS"></div>
+      <div class="fg"><label>Подзаголовок (под названием)</label><input type="text" id="editLogoSub" placeholder="массаж и оздоровление"></div>
+      <div class="fg"><label>Имя специалиста</label><input type="text" id="editName"></div>
       <div class="fg"><label>Описание</label><textarea id="editDesc" style="height:100px;width:100%;padding:10px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-family:inherit;font-size:14px;outline:none;resize:none"></textarea></div>
       <div class="fg"><label>Адрес</label><input type="text" id="editAddr"></div>
       <div class="fg"><label>Телефон</label><input type="text" id="editPhone"></div>
@@ -439,7 +456,7 @@ function getBookings(){return gs('veltis_bookings',[])}
 function setBookings(b){ss('veltis_bookings',b)}
 function getBlocked(){return gs('veltis_blocked',{})}
 function setBlocked(b){ss('veltis_blocked',b)}
-function getAbout(){return gs('veltis_about',{name:'Ширяев Александр',desc:'Диплом МИРК, 288 часов, 2026 г. Студент специальности Физическая реабилитация.',addr:'Нахабино, ЖК Малина',phone:'8 925 079-08-61'})}
+function getAbout(){return gs('veltis_about',{logo:'VELTIS',logoSub:'массаж и оздоровление',name:'Ширяев Александр',desc:'Диплом МИРК, 288 часов, 2026 г. Студент специальности Физическая реабилитация.',addr:'Нахабино, ЖК Малина',phone:'8 925 079-08-61'})}
 function getServices(){return gs('veltis_services',DEFAULT_SERVICES)}
 function setServices(s){ss('veltis_services',s)}
 function getSpecialists(){return gs('veltis_specialists',DEFAULT_SPECIALISTS)}
@@ -801,6 +818,45 @@ function renderInfo(){
 }
 
 // SUCCESS TEXT
+function applyHeader(){
+  var a=getAbout();
+  var logoImg=document.getElementById('headerLogoImg');
+  var logoText=document.getElementById('headerLogo');
+  var sub=document.getElementById('headerSub');
+  var savedImg=localStorage.getItem('veltis_logo_img');
+  if(logoImg&&savedImg){
+    logoImg.src=savedImg;logoImg.style.display='block';
+    if(logoText)logoText.style.display='none';
+  } else {
+    if(logoImg)logoImg.style.display='none';
+    if(logoText){logoText.style.display='block';logoText.textContent=a.logo||'VELTIS';}
+  }
+  if(sub)sub.textContent=a.logoSub||'массаж и оздоровление';
+}
+
+function loadLogo(input){
+  var file=input.files[0];
+  if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var dataUrl=e.target.result;
+    localStorage.setItem('veltis_logo_img',dataUrl);
+    var preview=document.getElementById('previewLogo');
+    if(preview){preview.src=dataUrl;preview.style.display='block';}
+    applyHeader();
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeLogo(){
+  localStorage.removeItem('veltis_logo_img');
+  var preview=document.getElementById('previewLogo');
+  if(preview){preview.src='';preview.style.display='none';}
+  var input=document.getElementById('logoFile');
+  if(input)input.value='';
+  applyHeader();
+}
+
 function applySuccessText(){
   var s=getSuccessText();
   var t=document.getElementById('successTitle');
@@ -1042,14 +1098,25 @@ function savePrices(){
 // ABOUT
 function loadAboutEditor(){
   var a=getAbout();
-  ['editName','editDesc','editAddr','editPhone'].forEach(function(id,i){
-    var el=document.getElementById(id);
-    if(el)el.value=[a.name,a.desc,a.addr,a.phone][i]||'';
-  });
+  var fields=['editLogo','editLogoSub','editName','editDesc','editAddr','editPhone'];
+  var vals=[a.logo||'VELTIS',a.logoSub||'массаж и оздоровление',a.name,a.desc,a.addr,a.phone];
+  fields.forEach(function(id,i){var el=document.getElementById(id);if(el)el.value=vals[i]||'';});
+  var savedImg=localStorage.getItem('veltis_logo_img');
+  var preview=document.getElementById('previewLogo');
+  if(preview&&savedImg){preview.src=savedImg;preview.style.display='block';}
+  else if(preview){preview.style.display='none';}
 }
 function saveAbout(){
-  var about={name:document.getElementById('editName').value.trim()||'Ширяев Александр',desc:document.getElementById('editDesc').value.trim(),addr:document.getElementById('editAddr').value.trim(),phone:document.getElementById('editPhone').value.trim()};
+  var about={
+    logo:document.getElementById('editLogo').value.trim()||'VELTIS',
+    logoSub:document.getElementById('editLogoSub').value.trim()||'массаж и оздоровление',
+    name:document.getElementById('editName').value.trim()||'Ширяев Александр',
+    desc:document.getElementById('editDesc').value.trim(),
+    addr:document.getElementById('editAddr').value.trim(),
+    phone:document.getElementById('editPhone').value.trim()
+  };
   ss('veltis_about',about);if(window.fbSave)window.fbSave('about',about).catch(function(){});
+  applyHeader();
   alert('Сохранено!');renderInfo();
 }
 
@@ -1114,6 +1181,7 @@ window.fbReloadBookings = function(){
 
 // INIT
 updateServiceSelect();updateSpecialistSelect();updateLocationSelect();
+applyHeader();
 applySuccessText();
 renderCal();
 </script>
