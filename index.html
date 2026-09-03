@@ -182,6 +182,18 @@ body{font-family:-apple-system,'Segoe UI',Arial,sans-serif;background:var(--bg);
   <div class="section" id="slotsSection" style="display:none">
     <div class="sec-title" id="slotsDayTitle">Выберите время</div>
     <div class="slots" id="slotsGrid"></div>
+    <div style="margin-top:12px;text-align:center">
+      <button onclick="toggleCustomTime()" style="background:none;border:1px solid var(--border);color:var(--muted);padding:8px 16px;border-radius:10px;font-size:12px;cursor:pointer;font-family:inherit">
+        Нет нужного времени? Предложить своё
+      </button>
+    </div>
+    <div id="customTimeBlock" style="display:none;margin-top:10px;background:var(--card);border-radius:14px;padding:14px;border:1px solid var(--border)">
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px">Введите желаемое время — мастер рассмотрит и ответит в Telegram</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="time" id="customTimeInput" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-size:15px;font-family:inherit;outline:none">
+        <button onclick="submitCustomTime()" style="padding:10px 16px;border-radius:10px;background:var(--gold);border:none;color:#0a0d14;font-weight:700;cursor:pointer;font-family:inherit">Отправить</button>
+      </div>
+    </div>
   </div>
   <div class="section" id="serviceSection" style="display:none">
     <div class="sec-title">Специалист</div>
@@ -365,15 +377,12 @@ body{font-family:-apple-system,'Segoe UI',Arial,sans-serif;background:var(--bg);
     <div class="admin-card">
       <div class="admin-title">⏰ Расписание</div>
       <div id="scheduleEditor"></div>
-      <div style="margin-top:12px;display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--border)">
-        <span style="font-size:12px;color:var(--muted);flex:1">Буфер между сеансами:</span>
-        <select id="bufferSelect" onchange="saveBuffer()" style="padding:8px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;font-family:inherit;outline:none">
-          <option value="0">Без буфера</option>
-          <option value="15">15 минут</option>
-          <option value="30" selected>30 минут</option>
-          <option value="60">1 час</option>
-          <option value="90">1.5 часа</option>
-        </select>
+      <div style="margin-top:12px;padding:10px 0;border-top:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <span style="font-size:12px;color:var(--muted);flex:1">Шаг между записями (мин):</span>
+          <input type="number" id="slotStepSelect" min="30" max="480" placeholder="150" onchange="saveSlotStep()" style="width:80px;padding:8px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;font-family:inherit;outline:none;text-align:center">
+        </div>
+        <div style="font-size:11px;color:var(--muted)">Сейчас: 150 мин (2.5 ч) — выезд. Для кабинета поставь 90 мин (1.5 ч).</div>
       </div>
       <button class="btn btn-gold" style="margin-top:8px" onclick="saveSchedule()">Сохранить расписание</button>
     </div>
@@ -525,8 +534,9 @@ function renderCal(){
     var isOpen=schedDay&&schedDay.on;
     var isBlocked=blocked[dateStr];
     var slots=getDaySlots(dateStr,dow);
-    var dayBookings=bookings.filter(function(b){return b.date===dateStr&&b.status!=='cancelled'});
-    var freeSlots=slots.filter(function(sl){return !dayBookings.some(function(b){return b.time===sl})});
+    var svcsAll=getServices().filter(function(sv){return sv.active!==false;});
+    var minDurCal=svcsAll.length?Math.min.apply(null,svcsAll.map(function(sv){return sv.dur||60;})):60;
+    var freeSlots=slots.filter(function(sl){return isSlotFree(dateStr,sl,bookings,minDurCal);});
     var cls='',status='';
     if(isPast){cls='past';}
     else if(!isOpen||isBlocked){cls='closed';status='выходной';}
@@ -546,18 +556,39 @@ function renderCal(){
 }
 
 function getBuffer(){
-  try{return parseInt(localStorage.getItem('veltis_buffer')||'30');}catch(e){return 30;}
+  try{return parseInt(localStorage.getItem('veltis_buffer')||'0');}catch(e){return 0;}
 }
 
 function getDaySlots(dateStr,dow){
   var sched=getSchedule();var day=sched[dow];
   if(!day||!day.on)return[];
   var slots=[],from=timeToMins(day.from),to=timeToMins(day.to);
-  var buf=getBuffer();
-  // Шаг = 60 мин сеанс + буфер
-  var step=60+buf;
-  for(var m=from;m+60<=to;m+=step)slots.push(minsToTime(m));
+  // Шаг слотов — настраивается в админке
+  var step=parseInt(localStorage.getItem('veltis_slot_step')||'150');
+  for(var m=from;m<to;m+=step)slots.push(minsToTime(m));
   return slots;
+}
+
+function isSlotFree(dateStr,slotTime,bookings,minDur){
+  var buf=getBuffer();
+  var slotMins=timeToMins(slotTime);
+  // Минимальная длительность сеанса для проверки
+  var dur=minDur||60;
+  var slotEnd=slotMins+dur+buf;
+  // Проверяем все активные записи этого дня
+  var dayBookings=bookings.filter(function(b){return b.date===dateStr&&b.status!=='cancelled';});
+  for(var i=0;i<dayBookings.length;i++){
+    var b=dayBookings[i];
+    var bStart=timeToMins(b.time);
+    var bDur=parseInt(b.duration)||60;
+    var bEnd=bStart+bDur+buf;
+    // Пересечение: новый слот начинается до конца существующей записи
+    // И существующая запись начинается до конца нового слота
+    if(slotMins<bEnd && slotEnd>bStart){
+      return false;
+    }
+  }
+  return true;
 }
 function timeToMins(t){var p=t.split(':');return parseInt(p[0])*60+parseInt(p[1])}
 function minsToTime(m){var h=Math.floor(m/60),mn=m%60;return(h<10?'0':'')+h+':'+(mn<10?'0':'')+mn}
@@ -567,17 +598,19 @@ function selectDate(dateStr,dow){selDate=dateStr;selSlot=null;renderCal();render
 function renderSlots(dateStr,dow){
   var slots=getDaySlots(dateStr,dow);
   var bookings=getBookings();
-  var dayBookings=bookings.filter(function(b){return b.date===dateStr&&b.status!=='cancelled'});
   var d=new Date(dateStr);
   var dayNames=['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
   document.getElementById('slotsDayTitle').textContent=dayNames[d.getDay()]+', '+d.getDate()+' '+MONTHS[d.getMonth()].toLowerCase();
   var grid=document.getElementById('slotsGrid');grid.innerHTML='';
+  // Получаем минимальную длительность выбранной услуги
+  var svcs=getServices().filter(function(sv){return sv.active!==false;});
+  var minDur=svcs.length?Math.min.apply(null,svcs.map(function(sv){return sv.dur||60;})):60;
   slots.forEach(function(sl){
-    var isBusy=dayBookings.some(function(b){return b.time===sl});
+    var free=isSlotFree(dateStr,sl,bookings,minDur);
     var el=document.createElement('div');
-    el.className='slot '+(isBusy?'busy':'free')+(selSlot===sl?' selected':'');
-    el.innerHTML='<div class="st">'+sl+'</div><div class="sl">'+(isBusy?'занято':'свободно')+'</div>';
-    if(!isBusy){el.addEventListener('click',function(){selectSlot(sl,el)});}
+    el.className='slot '+(free?'free':'busy')+(selSlot===sl?' selected':'');
+    el.innerHTML='<div class="st">'+sl+'</div><div class="sl">'+(free?'свободно':'занято')+'</div>';
+    if(free){el.addEventListener('click',function(){selectSlot(sl,el)});}
     grid.appendChild(el);
   });
   document.getElementById('slotsSection').style.display='block';
@@ -585,6 +618,34 @@ function renderSlots(dateStr,dow){
   document.getElementById('serviceSection').style.display='none';
   document.getElementById('formSection').style.display='none';
   document.getElementById('slotsSection').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function toggleCustomTime(){
+  var block=document.getElementById('customTimeBlock');
+  if(block)block.style.display=block.style.display==='none'?'block':'none';
+}
+
+function submitCustomTime(){
+  var timeInput=document.getElementById('customTimeInput');
+  var customTime=timeInput?timeInput.value:'';
+  if(!customTime){alert('Введите время');return;}
+  if(!selDate){alert('Сначала выберите дату');return;}
+  // Показываем форму для ввода контактов
+  selSlot=customTime;
+  document.getElementById('customTimeBlock').style.display='none';
+  document.getElementById('serviceSection').style.display='block';
+  document.getElementById('formSection').style.display='block';
+  // Помечаем что это кастомное время
+  var summaryEl=document.getElementById('bookingSummary');
+  var d=new Date(selDate);
+  var dayNames=['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+  if(summaryEl){
+    summaryEl.innerHTML=
+      '<div class="bs-row"><span class="bs-label">Дата</span><span class="bs-val">'+dayNames[d.getDay()]+', '+d.getDate()+' '+MONTHS[d.getMonth()].toLowerCase()+'</span></div>'+
+      '<div class="bs-row"><span class="bs-label">Желаемое время</span><span class="bs-val">'+customTime+' (запрос)</span></div>'+
+      '<div style="font-size:11px;color:var(--muted);margin-top:6px;padding:6px 0">Мастер подтвердит это время в Telegram</div>';
+  }
+  document.getElementById('formSection').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 function selectSlot(sl,el){
@@ -688,7 +749,8 @@ function submitBooking(){
   var bookings=getBookings();bookings.push(booking);setBookings(bookings);
   var d=new Date(selDate);
   var dayNames=['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
-  sendTgNotify('<b>Новая запись VELTIS</b>\n'+name+'\n'+phone+(TG_USERNAME?'\n@'+TG_USERNAME:'')+'\n'+dayNames[d.getDay()]+' '+d.getDate()+' '+MONTHS[d.getMonth()]+' '+selSlot+'\n'+sv.name+' '+sv.price+' руб\n'+sp.name+' | '+loc.name+(comment?'\n'+comment:''));
+  var isCustomTime=!getDaySlots(selDate,new Date(selDate).getDay()).some(function(s){return s===selSlot;});
+  sendTgNotify((isCustomTime?'<b>ЗАПРОС — нестандартное время!</b>':'<b>Новая запись VELTIS</b>')+'\n'+name+'\n'+phone+(TG_USERNAME?'\n@'+TG_USERNAME:'')+'\n'+dayNames[d.getDay()]+' '+d.getDate()+' '+MONTHS[d.getMonth()]+' '+selSlot+'\n'+sv.name+' '+sv.price+' руб\n'+sp.name+' | '+loc.name+(comment?'\n'+comment:''));
   applySuccessText();
   document.getElementById('successBox').innerHTML=
     '<div class="success-row"><span style="color:var(--muted)">Имя</span><span>'+name+'</span></div>'+
@@ -1172,9 +1234,16 @@ function saveBuffer(){
   if(sel)localStorage.setItem('veltis_buffer',sel.value);
   renderCal();
 }
+function saveSlotStep(){
+  var sel=document.getElementById('slotStepSelect');
+  if(sel)localStorage.setItem('veltis_slot_step',sel.value);
+  renderCal();
+}
 function loadBufferSelect(){
   var sel=document.getElementById('bufferSelect');
   if(sel)sel.value=getBuffer();
+  var stepSel=document.getElementById('slotStepSelect');
+  if(stepSel)stepSel.value=localStorage.getItem('veltis_slot_step')||'150';
 }
 function saveSchedule(){
   var sched=getSchedule();
