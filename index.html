@@ -4,12 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>VELTIS — Запись на массаж</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
   --bg:#0a0d14;--surface:#111520;--card:#161b28;--border:#1e2535;
   --gold:#c9a84c;--gold2:#f5d78e;--gold3:#8a6a1e;
   --text:#e8eaf0;--muted:#6b7280;--green:#22c55e;--red:#ef4444;--blue:#3b82f6;
+  --orange:#f97316;
 }
 body{font-family:-apple-system,'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding-bottom:70px}
 .view{display:none}.view.active{display:block}
@@ -17,6 +19,7 @@ body{font-family:-apple-system,'Segoe UI',Arial,sans-serif;background:var(--bg);
 .logo{font-size:28px;font-weight:800;letter-spacing:2px;background:linear-gradient(135deg,var(--gold),var(--gold2),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;cursor:default;user-select:none}
 .logo-sub{font-size:11px;letter-spacing:4px;color:var(--muted);text-transform:uppercase;margin-top:2px}
 .gold-line{width:40px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:12px auto}
+/* CALENDAR */
 .cal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 16px 8px}
 .cal-title{font-size:16px;font-weight:700}
 .cal-nav{width:36px;height:36px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
@@ -39,8 +42,10 @@ body{font-family:-apple-system,'Segoe UI',Arial,sans-serif;background:var(--bg);
 .legend{display:flex;gap:12px;padding:0 16px 16px;flex-wrap:wrap}
 .leg{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted)}
 .leg-dot{width:8px;height:8px;border-radius:50%}
+/* SECTIONS */
 .section{padding:0 16px;margin-bottom:16px}
 .sec-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:10px}
+/* SLOTS */
 .slots{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .slot{padding:10px 4px;border-radius:12px;border:1px solid var(--border);background:var(--card);text-align:center;cursor:pointer;transition:.15s}
 .slot .st{font-size:14px;font-weight:700}
@@ -51,6 +56,7 @@ body{font-family:-apple-system,'Segoe UI',Arial,sans-serif;background:var(--bg);
 .slot.busy .sl{color:var(--red)}
 .slot.selected{border-color:var(--gold);background:rgba(201,168,76,0.12)}
 .slot.selected .st{color:var(--gold)}
+/* FORM */
 .form-card{background:var(--card);border-radius:16px;padding:16px;border:1px solid var(--border);margin:0 16px 16px}
 .fg{margin-bottom:14px}
 .fg label{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px}
@@ -61,11 +67,14 @@ body{font-family:-apple-system,'Segoe UI',Arial,sans-serif;background:var(--bg);
 .bs-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0}
 .bs-label{font-size:12px;color:var(--muted)}
 .bs-val{font-size:13px;font-weight:700;color:var(--gold)}
+/* BUTTONS */
 .btn{width:100%;padding:15px;border-radius:14px;border:none;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s;margin-bottom:10px}
 .btn-gold{background:linear-gradient(135deg,var(--gold3),var(--gold),var(--gold2));color:#0a0d14}
+.btn-red{background:rgba(239,68,68,0.15);color:var(--red);border:1px solid rgba(239,68,68,0.3)}
+.btn-blue{background:rgba(59,130,246,0.15);color:var(--blue);border:1px solid rgba(59,130,246,0.3)}
 .btn-outline{background:none;border:1.5px solid var(--border);color:var(--text)}
-.btn-outline:hover{border-color:var(--gold);color:var(--gold)}
 .btn-wrap{padding:0 16px}
+/* SUCCESS */
 .success-card{text-align:center;padding:40px 20px}
 .success-ico{font-size:64px;margin-bottom:16px}
 .success-title{font-size:22px;font-weight:800;color:var(--gold);margin-bottom:8px}
@@ -73,10 +82,26 @@ body{font-family:-apple-system,'Segoe UI',Arial,sans-serif;background:var(--bg);
 .success-box{background:var(--card);border-radius:16px;padding:16px;margin:20px 16px;border:1px solid rgba(201,168,76,0.3)}
 .success-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px}
 .success-row:last-child{border:none}
+/* MY BOOKINGS */
+.my-booking-card{background:var(--card);border-radius:14px;padding:14px;margin:0 16px 10px;border:1px solid var(--border)}
+.mb-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.mb-date{font-size:14px;font-weight:700}
+.mb-status{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:700}
+.mb-status.new{background:rgba(201,168,76,0.15);color:var(--gold)}
+.mb-status.confirmed{background:rgba(34,197,94,0.15);color:var(--green)}
+.mb-status.cancelled{background:rgba(239,68,68,0.15);color:var(--red)}
+.mb-status.rescheduled{background:rgba(59,130,246,0.15);color:var(--blue)}
+.mb-detail{font-size:12px;color:var(--muted);margin-bottom:4px}
+.mb-actions{display:flex;gap:8px;margin-top:10px}
+.mb-btn{flex:1;padding:8px;border-radius:10px;border:none;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
+.mb-btn-cancel{background:rgba(239,68,68,0.1);color:var(--red);border:1px solid rgba(239,68,68,0.3)}
+.mb-btn-reschedule{background:rgba(59,130,246,0.1);color:var(--blue);border:1px solid rgba(59,130,246,0.3)}
+/* BOTTOM NAV */
 .bnav{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);display:flex;z-index:50}
 .bnb{flex:1;padding:10px 4px 8px;border:none;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--muted);font-family:inherit;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px}
 .bnb.on{color:var(--gold)}
 .bnb .bi{font-size:20px}
+/* ADMIN */
 .admin-card{background:var(--card);border-radius:16px;padding:16px;border:1px solid var(--border);margin:0 16px 12px}
 .admin-title{font-size:13px;font-weight:700;margin-bottom:12px;color:var(--gold)}
 .schedule-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)}
@@ -88,12 +113,30 @@ body{font-family:-apple-system,'Segoe UI',Arial,sans-serif;background:var(--bg);
 .toggle::after{content:'';position:absolute;width:18px;height:18px;border-radius:50%;background:white;top:3px;transition:.3s}
 .toggle.on::after{left:23px}.toggle.off::after{left:3px}
 .time-input{background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:4px 8px;font-size:12px;width:60px;text-align:center}
-.booking-item{background:var(--card);border-radius:14px;padding:12px 14px;margin-bottom:8px;border:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.bi-info{flex:1}
+/* BOOKING ITEMS */
+.booking-item{background:var(--card);border-radius:14px;padding:12px 14px;margin-bottom:8px;border:1px solid var(--border)}
+.bi-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
 .bi-name{font-size:14px;font-weight:700}
-.bi-detail{font-size:11px;color:var(--muted);margin-top:2px}
-.bi-cancel{background:none;border:none;color:var(--red);font-size:16px;cursor:pointer;padding:4px}
-.empty-state{text-align:center;padding:40px 20px;color:var(--muted)}
+.bi-status-badge{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:700}
+.bi-status-badge.new{background:rgba(201,168,76,0.15);color:var(--gold)}
+.bi-status-badge.confirmed{background:rgba(34,197,94,0.15);color:var(--green)}
+.bi-status-badge.cancelled{background:rgba(239,68,68,0.15);color:var(--red)}
+.bi-status-badge.rescheduled{background:rgba(59,130,246,0.15);color:var(--blue)}
+.bi-detail{font-size:11px;color:var(--muted);margin-bottom:2px}
+.bi-actions{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.bi-act{padding:6px 10px;border-radius:8px;border:none;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit}
+.bi-confirm{background:rgba(34,197,94,0.15);color:var(--green);border:1px solid rgba(34,197,94,0.3)}
+.bi-cancel-btn{background:rgba(239,68,68,0.1);color:var(--red);border:1px solid rgba(239,68,68,0.3)}
+/* FILTERS */
+.filters{display:flex;gap:8px;padding:0 16px 12px;overflow-x:auto;scrollbar-width:none}
+.filter-btn{padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:var(--card);color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:inherit}
+.filter-btn.on{background:rgba(201,168,76,0.15);border-color:var(--gold);color:var(--gold)}
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px 12px}
+.stat-card{background:var(--card);border-radius:14px;padding:14px;border:1px solid var(--border);text-align:center}
+.stat-num{font-size:24px;font-weight:800;color:var(--gold)}
+.stat-label{font-size:11px;color:var(--muted);margin-top:4px}
+/* ADMIN LOCK */
 .admin-lock{text-align:center;padding:60px 20px}
 .lock-ico{font-size:48px;margin-bottom:16px}
 .lock-title{font-size:18px;font-weight:700;margin-bottom:20px}
@@ -101,10 +144,16 @@ body{font-family:-apple-system,'Segoe UI',Arial,sans-serif;background:var(--bg);
 .lock-input:focus{border-color:var(--gold)}
 .lock-btn{margin-top:16px;padding:12px 32px;border-radius:12px;background:var(--gold);color:#0a0d14;border:none;font-weight:700;font-size:15px;cursor:pointer;font-family:inherit}
 .lock-err{color:var(--red);font-size:12px;margin-top:10px;min-height:18px}
+/* RESCHEDULE MODAL */
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:100;align-items:flex-end}
+.modal.open{display:flex}
+.modal-inner{background:var(--card);border-radius:20px 20px 0 0;padding:20px;width:100%;max-height:80vh;overflow-y:auto}
+.modal-title{font-size:16px;font-weight:700;margin-bottom:16px;text-align:center}
 </style>
 </head>
 <body>
 
+<!-- ═══ ЗАПИСЬ ═══ -->
 <div id="view-book" class="view active">
   <div class="hdr">
     <div class="logo" onclick="secretTap()">VELTIS</div>
@@ -132,18 +181,12 @@ body{font-family:-apple-system,'Segoe UI',Arial,sans-serif;background:var(--bg);
     <div class="slots" id="slotsGrid"></div>
   </div>
   <div class="section" id="serviceSection" style="display:none">
-    <div class="sec-title">Услуга</div>
-    <div class="fg">
-      <select id="serviceSelect"></select>
-    </div>
-  </div>
-  <div class="section" id="specialistSection" style="display:none">
     <div class="sec-title">Специалист</div>
     <div class="fg"><select id="specialistSelect" onchange="renderSummary()"></select></div>
-  </div>
-  <div class="section" id="locationSection" style="display:none">
-    <div class="sec-title">Место</div>
+    <div class="sec-title" style="margin-top:8px">Место</div>
     <div class="fg"><select id="locationSelect" onchange="renderSummary()"></select></div>
+    <div class="sec-title" style="margin-top:8px">Услуга</div>
+    <div class="fg"><select id="serviceSelect" onchange="renderSummary()"></select></div>
   </div>
   <div id="formSection" style="display:none">
     <div class="booking-summary" id="bookingSummary"></div>
@@ -159,6 +202,7 @@ body{font-family:-apple-system,'Segoe UI',Arial,sans-serif;background:var(--bg);
   </div>
 </div>
 
+<!-- ═══ УСПЕХ ═══ -->
 <div id="view-success" class="view">
   <div class="success-card">
     <div class="success-ico">✨</div>
@@ -166,9 +210,25 @@ body{font-family:-apple-system,'Segoe UI',Arial,sans-serif;background:var(--bg);
     <div class="success-sub" id="successText">Александр свяжется для подтверждения.<br>Обычно в течение 1-2 часов.</div>
   </div>
   <div class="success-box" id="successBox"></div>
-  <div class="btn-wrap"><button class="btn btn-gold" onclick="newBooking()">Записаться ещё раз</button></div>
+  <div class="btn-wrap">
+    <button class="btn btn-gold" onclick="goView('mybooks')">Мои записи</button>
+    <button class="btn btn-outline" onclick="newBooking()">Записаться ещё раз</button>
+  </div>
 </div>
 
+<!-- ═══ МОИ ЗАПИСИ ═══ -->
+<div id="view-mybooks" class="view">
+  <div class="hdr">
+    <div class="logo">VELTIS</div>
+    <div class="logo-sub">мои записи</div>
+    <div class="gold-line"></div>
+  </div>
+  <div style="padding:12px 16px 8px" id="mybooksContent">
+    <div style="text-align:center;padding:40px 20px;color:var(--muted)">Загрузка...</div>
+  </div>
+</div>
+
+<!-- ═══ О НАС ═══ -->
 <div id="view-info" class="view">
   <div class="hdr">
     <div class="logo">VELTIS</div>
@@ -195,6 +255,7 @@ body{font-family:-apple-system,'Segoe UI',Arial,sans-serif;background:var(--bg);
   </div>
 </div>
 
+<!-- ═══ АДМИН ═══ -->
 <div id="view-admin" class="view">
   <div id="adminLock">
     <div class="admin-lock">
@@ -210,38 +271,53 @@ body{font-family:-apple-system,'Segoe UI',Arial,sans-serif;background:var(--bg);
       <div style="font-size:18px;font-weight:800;color:var(--gold)">Управление</div>
       <button onclick="lockAdmin()" style="background:none;border:1px solid var(--border);color:var(--muted);padding:6px 12px;border-radius:8px;cursor:pointer;font-size:12px;font-family:inherit">Выйти</button>
     </div>
-    <div class="admin-card">
-      <div class="admin-title">✅ Текст после записи</div>
-      <div class="fg"><label>Заголовок</label><input type="text" id="editSuccessTitle" placeholder="Запись принята!"></div>
-      <div class="fg"><label>Текст</label><textarea id="editSuccessText" style="height:80px;width:100%;padding:10px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-family:inherit;font-size:14px;outline:none;resize:none" placeholder="Александр свяжется для подтверждения."></textarea></div>
-      <button class="btn btn-gold" onclick="saveSuccessText()">Сохранить</button>
-    </div>
 
+    <!-- СТАТИСТИКА -->
+    <div class="stats-grid" id="statsGrid"></div>
+
+    <!-- ЗАПИСИ -->
+    <div style="padding:4px 16px 8px;display:flex;justify-content:space-between;align-items:center">
+      <div class="sec-title" style="margin:0">Записи</div>
+    </div>
+    <div class="filters" id="bookingFilters">
+      <button class="filter-btn on" onclick="setFilter('upcoming')">Предстоящие</button>
+      <button class="filter-btn" onclick="setFilter('all')">Все</button>
+      <button class="filter-btn" onclick="setFilter('new')">Новые</button>
+      <button class="filter-btn" onclick="setFilter('confirmed')">Подтверждённые</button>
+      <button class="filter-btn" onclick="setFilter('cancelled')">Отменённые</button>
+    </div>
+    <div id="adminBookings" style="padding:0 16px"></div>
+
+    <!-- СПЕЦИАЛИСТЫ -->
     <div class="admin-card">
       <div class="admin-title">👥 Специалисты</div>
       <div id="specialistsEditor"></div>
-      <div style="margin-top:10px;display:flex;gap:8px">
-        <input type="text" id="newSpecName" placeholder="Имя специалиста" style="flex:2;padding:10px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-size:14px;font-family:inherit;outline:none">
-        <input type="text" id="newSpecRole" placeholder="Роль" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-size:14px;font-family:inherit;outline:none">
+      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+        <input type="text" id="newSpecName" placeholder="Имя" style="flex:2;min-width:120px;padding:10px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;font-family:inherit;outline:none">
+        <input type="text" id="newSpecRole" placeholder="Роль" style="flex:1;min-width:90px;padding:10px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;font-family:inherit;outline:none">
         <button onclick="addSpecialist()" style="padding:10px 14px;border-radius:10px;background:var(--gold);border:none;color:#0a0d14;font-weight:700;cursor:pointer">+</button>
       </div>
     </div>
 
+    <!-- ЛОКАЦИИ -->
     <div class="admin-card">
-      <div class="admin-title">📍 Локации (салоны и выезд)</div>
+      <div class="admin-title">📍 Локации</div>
       <div id="locationsEditor"></div>
       <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
-        <input type="text" id="newLocName" placeholder="Название (Выезд / Салон на Ленина)" style="flex:2;min-width:140px;padding:10px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-size:14px;font-family:inherit;outline:none">
-        <input type="text" id="newLocAddr" placeholder="Адрес" style="flex:2;min-width:140px;padding:10px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-size:14px;font-family:inherit;outline:none">
+        <input type="text" id="newLocName" placeholder="Название" style="flex:2;min-width:120px;padding:10px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;font-family:inherit;outline:none">
+        <input type="text" id="newLocAddr" placeholder="Адрес" style="flex:2;min-width:120px;padding:10px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;font-family:inherit;outline:none">
         <button onclick="addLocation()" style="padding:10px 14px;border-radius:10px;background:var(--gold);border:none;color:#0a0d14;font-weight:700;cursor:pointer">+</button>
       </div>
     </div>
 
+    <!-- ПРАЙС -->
     <div class="admin-card">
       <div class="admin-title">💰 Прайс</div>
       <div id="priceEditor"></div>
       <button class="btn btn-gold" style="margin-top:12px" onclick="savePrices()">Сохранить прайс</button>
     </div>
+
+    <!-- О НАС -->
     <div class="admin-card">
       <div class="admin-title">📝 О нас</div>
       <div class="fg"><label>Имя</label><input type="text" id="editName"></div>
@@ -250,13 +326,23 @@ body{font-family:-apple-system,'Segoe UI',Arial,sans-serif;background:var(--bg);
       <div class="fg"><label>Телефон</label><input type="text" id="editPhone"></div>
       <button class="btn btn-gold" onclick="saveAbout()">Сохранить</button>
     </div>
+
+    <!-- ТЕКСТ ПОСЛЕ ЗАПИСИ -->
+    <div class="admin-card">
+      <div class="admin-title">✅ Текст после записи</div>
+      <div class="fg"><label>Заголовок</label><input type="text" id="editSuccessTitle" placeholder="Запись принята!"></div>
+      <div class="fg"><label>Текст</label><textarea id="editSuccessText" style="height:80px;width:100%;padding:10px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-family:inherit;font-size:14px;outline:none;resize:none"></textarea></div>
+      <button class="btn btn-gold" onclick="saveSuccessText()">Сохранить</button>
+    </div>
+
+    <!-- РАСПИСАНИЕ -->
     <div class="admin-card">
       <div class="admin-title">⏰ Расписание</div>
       <div id="scheduleEditor"></div>
       <button class="btn btn-gold" style="margin-top:12px" onclick="saveSchedule()">Сохранить расписание</button>
     </div>
-    <div style="padding:0 16px 8px"><div class="sec-title">Записи</div></div>
-    <div class="bookings-list" id="adminBookings"></div>
+
+    <!-- БЛОКИРОВКА ДАТ -->
     <div class="admin-card">
       <div class="admin-title">🚫 Заблокировать дату</div>
       <div class="fg"><input type="date" id="blockDate"></div>
@@ -273,8 +359,21 @@ body{font-family:-apple-system,'Segoe UI',Arial,sans-serif;background:var(--bg);
   </div>
 </div>
 
+<!-- ПЕРЕНОС (модалка) -->
+<div class="modal" id="rescheduleModal">
+  <div class="modal-inner">
+    <div class="modal-title">Выбери новую дату и время</div>
+    <div class="fg"><label>Дата</label><input type="date" id="rescheduleDate" min=""></div>
+    <div class="fg"><label>Время</label><select id="rescheduleTime"></select></div>
+    <button class="btn btn-gold" onclick="confirmReschedule()">Подтвердить перенос</button>
+    <button class="btn btn-outline" onclick="closeModal()">Отмена</button>
+  </div>
+</div>
+
+<!-- NAV -->
 <div class="bnav">
   <button class="bnb on" id="bn-book" onclick="goView('book')"><span class="bi">📅</span>Запись</button>
+  <button class="bnb" id="bn-mybooks" onclick="goView('mybooks')"><span class="bi">📋</span>Мои</button>
   <button class="bnb" id="bn-info" onclick="goView('info')"><span class="bi">💆</span>О нас</button>
 </div>
 
@@ -282,14 +381,18 @@ body{font-family:-apple-system,'Segoe UI',Arial,sans-serif;background:var(--bg);
 var ADMIN_PASS='19130415';
 var adminUnlocked=false;
 var _tapCount=0,_tapTimer=null;
-function secretTap(){
-  _tapCount++;clearTimeout(_tapTimer);
-  if(_tapCount>=5){_tapCount=0;goView('admin');}
-  else{_tapTimer=setTimeout(function(){_tapCount=0;},1500);}
-}
+var activeFilter='upcoming';
+var rescheduleBookingId=null;
+
+// Telegram WebApp
+var TgApp = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+var TgUser = TgApp && TgApp.initDataUnsafe && TgApp.initDataUnsafe.user ? TgApp.initDataUnsafe.user : null;
+var TG_USERNAME = TgUser ? (TgUser.username||'') : '';
+var TG_FIRSTNAME = TgUser ? (TgUser.first_name||'') : '';
 
 var TG_TOKEN='8804005529:AAEC5_5oTGbqySKkeowX744E4OJAv09U--8';
 var TG_CHAT='730279656';
+
 function sendTgNotify(text){
   fetch('https://api.telegram.org/bot'+TG_TOKEN+'/sendMessage',{
     method:'POST',headers:{'Content-Type':'application/json'},
@@ -297,6 +400,13 @@ function sendTgNotify(text){
   }).catch(function(){});
 }
 
+function secretTap(){
+  _tapCount++;clearTimeout(_tapTimer);
+  if(_tapCount>=5){_tapCount=0;goView('admin');}
+  else{_tapTimer=setTimeout(function(){_tapCount=0;},1500);}
+}
+
+// DEFAULTS
 var defaultSchedule={
   0:{on:true, label:'Воскресенье',from:'10:00',to:'20:00'},
   1:{on:false,label:'Понедельник',from:'21:00',to:'23:00'},
@@ -306,46 +416,44 @@ var defaultSchedule={
   5:{on:false,label:'Пятница',    from:'21:00',to:'23:00'},
   6:{on:true, label:'Суббота',    from:'21:00',to:'23:00'},
 };
-var DEFAULT_SPECIALISTS=[
-  {id:'alex', name:'Ширяев Александр', role:'Массажист', active:true, phone:'8 925 079-08-61'},
-];
-
-var DEFAULT_LOCATIONS=[
-  {id:'home', name:'Выезд на дом', address:'Нахабино и ближайшие районы', active:true},
-];
-
-function getSpecialists(){try{return JSON.parse(localStorage.getItem('veltis_specialists')||'null')||DEFAULT_SPECIALISTS}catch(e){return DEFAULT_SPECIALISTS}}
-function setSpecialists(s){localStorage.setItem('veltis_specialists',JSON.stringify(s))}
-function getLocations(){try{return JSON.parse(localStorage.getItem('veltis_locations')||'null')||DEFAULT_LOCATIONS}catch(e){return DEFAULT_LOCATIONS}}
-function setLocations(l){localStorage.setItem('veltis_locations',JSON.stringify(l))}
-
+var DEFAULT_SPECIALISTS=[{id:'alex',name:'Ширяев Александр',role:'Массажист',active:true,phone:'8 925 079-08-61'}];
+var DEFAULT_LOCATIONS=[{id:'home',name:'Выезд на дом',address:'Нахабино и ближайшие районы',active:true}];
 var DEFAULT_SERVICES=[
-  {id:'швз',        name:'Массаж ШВЗ',            price:800, dur:30},
-  {id:'спина',      name:'Массаж спины',           price:1000,dur:45},
-  {id:'классик',    name:'Классический (спина+ШВЗ)',price:1000,dur:45},
-  {id:'антистресс', name:'Антистрессовый',         price:1000,dur:45},
-  {id:'ноги',       name:'Массаж ног',             price:800, dur:40},
-  {id:'тело',       name:'Массаж всего тела',      price:1500,dur:60},
-  {id:'баночный',   name:'Баночный вакуумный',     price:900, dur:30},
-  {id:'медовый',    name:'Медовый массаж',         price:1200,dur:40},
-  {id:'спортивный', name:'Спортивный',             price:1200,dur:45},
+  {id:'швз',       name:'Массаж ШВЗ',            price:800, dur:30, active:true},
+  {id:'спина',     name:'Массаж спины',           price:1000,dur:45, active:true},
+  {id:'классик',   name:'Классический (спина+ШВЗ)',price:1000,dur:45, active:true},
+  {id:'антистресс',name:'Антистрессовый',         price:1000,dur:45, active:true},
+  {id:'ноги',      name:'Массаж ног',             price:800, dur:40, active:true},
+  {id:'тело',      name:'Массаж всего тела',      price:1500,dur:60, active:true},
+  {id:'баночный',  name:'Баночный вакуумный',     price:900, dur:30, active:true},
+  {id:'медовый',   name:'Медовый массаж',         price:1200,dur:40, active:true},
+  {id:'спортивный',name:'Спортивный',             price:1200,dur:45, active:true},
 ];
 
-function getSchedule(){try{return JSON.parse(localStorage.getItem('veltis_schedule')||'null')||defaultSchedule}catch(e){return defaultSchedule}}
-function setSchedule(s){localStorage.setItem('veltis_schedule',JSON.stringify(s))}
-function getBookings(){try{return JSON.parse(localStorage.getItem('veltis_bookings')||'[]')}catch(e){return[]}}
-function setBookings(b){localStorage.setItem('veltis_bookings',JSON.stringify(b))}
-function getBlocked(){try{return JSON.parse(localStorage.getItem('veltis_blocked')||'{}')}catch(e){return{}}}
-function setBlocked(b){localStorage.setItem('veltis_blocked',JSON.stringify(b))}
-function getAbout(){try{return JSON.parse(localStorage.getItem('veltis_about')||'null')||{name:'Ширяев Александр',desc:'Диплом МИРК, 288 часов, 2026 г. Студент специальности Физическая реабилитация. Выезд на дом — Нахабино, ЖК Малина.',addr:'Нахабино, ЖК Малина',phone:'8 925 079-08-61'}}catch(e){return{}}}
-function getServices(){try{return JSON.parse(localStorage.getItem('veltis_services')||'null')||DEFAULT_SERVICES}catch(e){return DEFAULT_SERVICES}}
-function setServices(s){localStorage.setItem('veltis_services',JSON.stringify(s))}
+// STORAGE
+function gs(k,def){try{return JSON.parse(localStorage.getItem(k)||'null')||def}catch(e){return def}}
+function ss(k,v){localStorage.setItem(k,JSON.stringify(v))}
+function getSchedule(){return gs('veltis_schedule',defaultSchedule)}
+function setSchedule(s){ss('veltis_schedule',s)}
+function getBookings(){return gs('veltis_bookings',[])}
+function setBookings(b){ss('veltis_bookings',b)}
+function getBlocked(){return gs('veltis_blocked',{})}
+function setBlocked(b){ss('veltis_blocked',b)}
+function getAbout(){return gs('veltis_about',{name:'Ширяев Александр',desc:'Диплом МИРК, 288 часов, 2026 г. Студент специальности Физическая реабилитация.',addr:'Нахабино, ЖК Малина',phone:'8 925 079-08-61'})}
+function getServices(){return gs('veltis_services',DEFAULT_SERVICES)}
+function setServices(s){ss('veltis_services',s)}
+function getSpecialists(){return gs('veltis_specialists',DEFAULT_SPECIALISTS)}
+function setSpecialists(s){ss('veltis_specialists',s)}
+function getLocations(){return gs('veltis_locations',DEFAULT_LOCATIONS)}
+function setLocations(l){ss('veltis_locations',l)}
+function getSuccessText(){return gs('veltis_success',{title:'Запись принята!',text:'Александр свяжется для подтверждения.\nОбычно в течение 1-2 часов.'})}
 
 var SERVICES=getServices();
 var MONTHS=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 var curYear=new Date().getFullYear(),curMonth=new Date().getMonth();
 var selDate=null,selSlot=null;
 
+// NAV
 function goView(v){
   document.querySelectorAll('.view').forEach(function(el){el.classList.remove('active')});
   document.querySelectorAll('.bnb').forEach(function(b){b.classList.remove('on')});
@@ -354,8 +462,10 @@ function goView(v){
   if(v==='info')renderInfo();
   if(v==='admin')renderAdmin();
   if(v==='book')renderCal();
+  if(v==='mybooks')renderMyBookings();
 }
 
+// CALENDAR
 function prevMonth(){if(curMonth===0){curMonth=11;curYear--}else{curMonth--};renderCal()}
 function nextMonth(){if(curMonth===11){curMonth=0;curYear++}else{curMonth++};renderCal()}
 
@@ -409,9 +519,7 @@ function getDaySlots(dateStr,dow){
 function timeToMins(t){var p=t.split(':');return parseInt(p[0])*60+parseInt(p[1])}
 function minsToTime(m){var h=Math.floor(m/60),mn=m%60;return(h<10?'0':'')+h+':'+(mn<10?'0':'')+mn}
 
-function selectDate(dateStr,dow){
-  selDate=dateStr;selSlot=null;renderCal();renderSlots(dateStr,dow);
-}
+function selectDate(dateStr,dow){selDate=dateStr;selSlot=null;renderCal();renderSlots(dateStr,dow);}
 
 function renderSlots(dateStr,dow){
   var slots=getDaySlots(dateStr,dow);
@@ -426,29 +534,27 @@ function renderSlots(dateStr,dow){
     var el=document.createElement('div');
     el.className='slot '+(isBusy?'busy':'free')+(selSlot===sl?' selected':'');
     el.innerHTML='<div class="st">'+sl+'</div><div class="sl">'+(isBusy?'занято':'свободно')+'</div>';
-    if(!isBusy){el.addEventListener('click',function(){selectSlot(sl)});}
+    if(!isBusy){el.addEventListener('click',function(){selectSlot(sl,el)});}
     grid.appendChild(el);
   });
   document.getElementById('slotsSection').style.display='block';
-  document.getElementById('serviceSection').style.display=selSlot?'block':'none';
+  updateSpecialistSelect();updateLocationSelect();updateServiceSelect();
+  document.getElementById('serviceSection').style.display='none';
   document.getElementById('formSection').style.display='none';
   document.getElementById('slotsSection').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
-function selectSlot(sl){
+function selectSlot(sl,el){
   selSlot=sl;
-  document.querySelectorAll('.slot').forEach(function(el){el.classList.remove('selected')});
-  event.currentTarget.classList.add('selected');
+  document.querySelectorAll('.slot').forEach(function(e){e.classList.remove('selected')});
+  el.classList.add('selected');
   document.getElementById('serviceSection').style.display='block';
-  updateSpecialistSelect();
-  updateLocationSelect();
-  document.getElementById('specialistSection').style.display='block';
-  document.getElementById('locationSection').style.display='block';
   document.getElementById('formSection').style.display='block';
   renderSummary();
   document.getElementById('formSection').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
+// SELECTS
 function updateSpecialistSelect(){
   var specs=getSpecialists().filter(function(s){return s.active});
   var sel=document.getElementById('specialistSelect');
@@ -461,18 +567,24 @@ function updateLocationSelect(){
   if(!sel)return;
   sel.innerHTML=locs.map(function(l){return'<option value="'+l.id+'">'+l.name+(l.address?' ('+l.address+')':'')+'</option>';}).join('');
 }
+function updateServiceSelect(){
+  var svcs=getServices().filter(function(sv){return sv.active!==false});
+  var sel=document.getElementById('serviceSelect');
+  if(!sel)return;
+  sel.innerHTML=svcs.map(function(sv){return'<option>'+sv.name+' — '+sv.price+' ₽ / '+sv.dur+' мин</option>';}).join('');
+}
+
 function renderSummary(){
-  var svcs=getServices();
+  if(!selDate||!selSlot)return;
+  var svcs=getServices().filter(function(sv){return sv.active!==false});
   var selIdx=document.getElementById('serviceSelect').selectedIndex;
   var sv=svcs[selIdx]||svcs[0];
   var specs=getSpecialists();
   var spSel=document.getElementById('specialistSelect');
-  var spId=spSel?spSel.value:'';
-  var sp=specs.find(function(s){return s.id===spId})||specs[0]||{name:''};
+  var sp=specs.find(function(s){return s.id===(spSel?spSel.value:'')})||specs[0]||{name:''};
   var locs=getLocations();
   var locSel=document.getElementById('locationSelect');
-  var locId=locSel?locSel.value:'';
-  var loc=locs.find(function(l){return l.id===locId})||locs[0]||{name:''};
+  var loc=locs.find(function(l){return l.id===(locSel?locSel.value:'')})||locs[0]||{name:''};
   var d=new Date(selDate);
   var dayNames=['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
   document.getElementById('bookingSummary').innerHTML=
@@ -483,30 +595,39 @@ function renderSummary(){
     '<div class="bs-row"><span class="bs-label">Услуга</span><span class="bs-val">'+sv.name+'</span></div>'+
     '<div class="bs-row"><span class="bs-label">Стоимость</span><span class="bs-val">'+sv.price+' ₽</span></div>';
 }
-document.addEventListener('change',function(e){if(e.target.id==='serviceSelect')renderSummary();});
+document.addEventListener('change',function(e){if(['serviceSelect','specialistSelect','locationSelect'].indexOf(e.target.id)>=0)renderSummary();});
 
+// SUBMIT BOOKING
 function submitBooking(){
   var name=document.getElementById('clientName').value.trim();
   var phone=document.getElementById('clientPhone').value.trim();
   var comment=document.getElementById('clientComment').value.trim();
   if(!name||!phone){alert('Заполните имя и телефон');return}
   if(!selDate||!selSlot){alert('Выберите дату и время');return}
-  var svcs=getServices();
+  var svcs=getServices().filter(function(sv){return sv.active!==false});
   var selIdx=document.getElementById('serviceSelect').selectedIndex;
   var sv=svcs[selIdx]||svcs[0];
-  var spSel=document.getElementById('specialistSelect');
-  var locSel=document.getElementById('locationSelect');
   var specs=getSpecialists();
   var locs=getLocations();
-  var sp=specs.find(function(s){return s.id===(spSel?spSel.value:'')}) || specs[0] || {name:'Ширяев Александр'};
-  var loc=locs.find(function(l){return l.id===(locSel?locSel.value:'')}) || locs[0] || {name:'Выезд на дом'};
+  var spSel=document.getElementById('specialistSelect');
+  var locSel=document.getElementById('locationSelect');
+  var sp=specs.find(function(s){return s.id===(spSel?spSel.value:'')})||specs[0]||{name:'Ширяев Александр'};
+  var loc=locs.find(function(l){return l.id===(locSel?locSel.value:'')})||locs[0]||{name:'Выезд на дом'};
   var bid=Date.now();
-  var booking={id:bid,date:selDate,time:selSlot,service:sv.name,price:sv.price,duration:sv.dur,specialist:sp.name,location:loc.name,address:loc.address||'',name:name,phone:phone,comment:comment,status:'new',created:new Date().toISOString()};
-  if(window.fbSave){window.fbSave('bookings/'+bid,booking).catch(function(){});}
+  var booking={
+    id:bid,date:selDate,time:selSlot,
+    service:sv.name,price:sv.price,duration:sv.dur,
+    specialist:sp.name,location:loc.name,address:loc.address||'',
+    name:name,phone:phone,comment:comment,
+    tgUsername:TG_USERNAME,tgName:TG_FIRSTNAME,
+    status:'new',created:new Date().toISOString()
+  };
+  if(window.fbSave)window.fbSave('bookings/'+bid,booking).catch(function(){});
   var bookings=getBookings();bookings.push(booking);setBookings(bookings);
   var d=new Date(selDate);
   var dayNames=['Воскресенье','Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
-  sendTgNotify('<b>Новая запись VELTIS</b>\n'+name+'\n'+phone+'\n'+dayNames[d.getDay()]+' '+d.getDate()+' '+MONTHS[d.getMonth()]+' '+selSlot+'\n'+sv.name+' '+sv.price+' руб'+(comment?'\n'+comment:''));
+  sendTgNotify('<b>Новая запись VELTIS</b>\n'+name+'\n'+phone+(TG_USERNAME?'\n@'+TG_USERNAME:'')+'\n'+dayNames[d.getDay()]+' '+d.getDate()+' '+MONTHS[d.getMonth()]+' '+selSlot+'\n'+sv.name+' '+sv.price+' руб\n'+sp.name+' | '+loc.name+(comment?'\n'+comment:''));
+  applySuccessText();
   document.getElementById('successBox').innerHTML=
     '<div class="success-row"><span style="color:var(--muted)">Имя</span><span>'+name+'</span></div>'+
     '<div class="success-row"><span style="color:var(--muted)">Дата</span><span>'+d.getDate()+' '+MONTHS[d.getMonth()]+'</span></div>'+
@@ -517,50 +638,170 @@ function submitBooking(){
     '<div class="success-row"><span style="color:var(--muted)">Стоимость</span><span style="color:var(--gold);font-weight:700">'+sv.price+' ₽</span></div>';
   document.querySelectorAll('.view').forEach(function(el){el.classList.remove('active')});
   document.getElementById('view-success').classList.add('active');
+  // Сохраняем телефон для "Мои записи"
+  ss('veltis_myphone',phone);
 }
 
 function resetBooking(){
   selDate=null;selSlot=null;
-  document.getElementById('slotsSection').style.display='none';
-  document.getElementById('serviceSection').style.display='none';
-  document.getElementById('formSection').style.display='none';
-  document.getElementById('clientName').value='';
-  document.getElementById('clientPhone').value='';
-  document.getElementById('clientComment').value='';
+  ['slotsSection','serviceSection','formSection'].forEach(function(id){document.getElementById(id).style.display='none';});
+  ['clientName','clientPhone','clientComment'].forEach(function(id){document.getElementById(id).value='';});
   renderCal();
 }
 function newBooking(){resetBooking();goView('book');}
 
-function updateServiceSelect(){
-  var svcs=getServices().filter(function(sv){return sv.active!==false});
-  var sel=document.getElementById('serviceSelect');
-  if(!sel)return;
-  sel.innerHTML=svcs.map(function(sv){return'<option>'+sv.name+' — '+sv.price+' ₽ / '+sv.dur+' мин</option>';}).join('');
+// МОИ ЗАПИСИ
+function renderMyBookings(){
+  var phone=gs('veltis_myphone','');
+  var cont=document.getElementById('mybooksContent');
+  if(!phone){
+    cont.innerHTML='<div style="text-align:center;padding:20px 0">'+'<div style="font-size:40px;margin-bottom:10px">📋</div>'+'<div style="color:var(--muted);font-size:14px;margin-bottom:16px">Введите телефон чтобы найти свои записи</div>'+'<div style="display:flex;gap:8px;max-width:320px;margin:0 auto">'+'<input type="tel" id="searchPhone" placeholder="+7 ___ ___ __ __" style="flex:1;padding:12px;border-radius:12px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-size:15px;font-family:inherit;outline:none">'+'<button onclick="searchByPhone()" style="padding:12px 16px;border-radius:12px;background:var(--gold);border:none;color:#0a0d14;font-weight:700;cursor:pointer">Найти</button>'+'</div></div>';
+    return;
+  }
+  showMyBookings(phone);
 }
 
-function getAboutData(){return getAbout();}
+function searchByPhone(){
+  var phone=document.getElementById('searchPhone').value.trim();
+  if(!phone)return;
+  ss('veltis_myphone',phone);
+  showMyBookings(phone);
+}
 
+function showMyBookings(phone){
+  var bookings=getBookings().filter(function(b){return b.phone===phone||b.phone.replace(/\D/g,'')===phone.replace(/\D/g,'')});
+  var cont=document.getElementById('mybooksContent');
+  if(!bookings.length){
+    cont.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted)">Записей с этим номером не найдено</div>'+
+      '<div style="padding:0 0 12px;text-align:center"><button onclick="ss(\'veltis_myphone\',\'\');renderMyBookings()" style="background:none;border:none;color:var(--gold);cursor:pointer;font-size:13px;font-weight:700">Попробовать другой номер</button></div>';
+    return;
+  }
+  bookings.sort(function(a,b){return b.date>a.date?1:b.date<a.date?-1:0});
+  var today=new Date().toISOString().slice(0,10);
+  cont.innerHTML='<div style="font-size:11px;color:var(--muted);margin-bottom:12px;font-weight:700">Найдено записей: '+bookings.length+'</div>'+
+    bookings.map(function(b){
+      var d=new Date(b.date);
+      var dayNames=['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+      var isFuture=b.date>=today;
+      var statusMap={new:'Ожидает',confirmed:'Подтверждена',cancelled:'Отменена',rescheduled:'Перенесена'};
+      var statusCls=b.status||'new';
+      return'<div class="my-booking-card">'+
+        '<div class="mb-header">'+
+          '<div class="mb-date">'+dayNames[d.getDay()]+', '+d.getDate()+' '+MONTHS[d.getMonth()]+' в '+b.time+'</div>'+
+          '<span class="mb-status '+statusCls+'">'+(statusMap[statusCls]||statusCls)+'</span>'+
+        '</div>'+
+        '<div class="mb-detail">'+b.service+' — '+b.price+' ₽</div>'+
+        '<div class="mb-detail">'+b.specialist+(b.location?' · '+b.location:'')+'</div>'+
+        (b.comment?'<div class="mb-detail">'+b.comment+'</div>':'')+
+        (isFuture&&b.status!=='cancelled'?
+          '<div class="mb-actions">'+
+            '<button class="mb-btn mb-btn-cancel" onclick="clientCancel('+b.id+')">Отменить</button>'+
+            '<button class="mb-btn mb-btn-reschedule" onclick="openReschedule('+b.id+')">Перенести</button>'+
+          '</div>':'')+
+        '</div>';
+    }).join('')+
+    '<div style="padding:12px 0;text-align:center"><button onclick="ss(\'veltis_myphone\',\'\');renderMyBookings()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px">Другой номер</button></div>';
+}
+
+// ОТМЕНА КЛИЕНТОМ
+function clientCancel(id){
+  if(!confirm('Отменить запись?'))return;
+  var bookings=getBookings();
+  var b=bookings.find(function(b){return b.id===id});
+  if(!b)return;
+  b.status='cancelled';
+  setBookings(bookings);
+  if(window.fbSave)window.fbSave('bookings/'+id+'/status','cancelled').catch(function(){});
+  sendTgNotify('<b>Клиент отменил запись</b>\n'+b.name+'\n'+b.phone+'\n'+b.date+' '+b.time+'\n'+b.service);
+  renderMyBookings();renderCal();
+}
+
+// ПЕРЕНОС
+function openReschedule(id){
+  rescheduleBookingId=id;
+  var modal=document.getElementById('rescheduleModal');
+  var dateInput=document.getElementById('rescheduleDate');
+  var today=new Date();today.setDate(today.getDate()+1);
+  dateInput.min=today.toISOString().slice(0,10);
+  dateInput.value='';
+  document.getElementById('rescheduleTime').innerHTML='<option>Сначала выберите дату</option>';
+  dateInput.onchange=function(){
+    var d=new Date(dateInput.value);
+    var slots=getDaySlots(dateInput.value,d.getDay());
+    var bookings=getBookings().filter(function(b){return b.date===dateInput.value&&b.status!=='cancelled'&&b.id!==id});
+    var free=slots.filter(function(sl){return !bookings.some(function(b){return b.time===sl})});
+    document.getElementById('rescheduleTime').innerHTML=free.length?
+      free.map(function(sl){return'<option>'+sl+'</option>';}).join(''):
+      '<option>Нет свободного времени</option>';
+  };
+  modal.classList.add('open');
+}
+
+function closeModal(){document.getElementById('rescheduleModal').classList.remove('open');}
+
+function confirmReschedule(){
+  var newDate=document.getElementById('rescheduleDate').value;
+  var newTime=document.getElementById('rescheduleTime').value;
+  if(!newDate||!newTime||newTime==='Нет свободного времени'||newTime==='Сначала выберите дату'){
+    alert('Выберите дату и время');return;
+  }
+  var bookings=getBookings();
+  var b=bookings.find(function(b){return b.id===rescheduleBookingId});
+  if(!b)return;
+  var oldDate=b.date,oldTime=b.time;
+  b.status='rescheduled';
+  b.rescheduledTo={date:newDate,time:newTime};
+  setBookings(bookings);
+  if(window.fbSave){
+    window.fbSave('bookings/'+b.id+'/status','rescheduled').catch(function(){});
+    window.fbSave('bookings/'+b.id+'/rescheduledTo',{date:newDate,time:newTime}).catch(function(){});
+  }
+  sendTgNotify('<b>Клиент просит перенести запись</b>\n'+b.name+'\n'+b.phone+'\nБыло: '+oldDate+' '+oldTime+'\nХочет: '+newDate+' '+newTime+'\n'+b.service);
+  closeModal();
+  alert('Запрос на перенос отправлен. Мастер подтвердит.');
+  renderMyBookings();renderCal();
+}
+
+// INFO
 function renderInfo(){
   var a=getAbout();
   var sp=document.getElementById('specialistInfo');
-  if(sp)sp.innerHTML='<strong style="color:var(--text)">'+a.name+'</strong><br><br>'+(a.desc||'').replace(/\n/g,'<br>')+'<br><br>'+(a.addr?'📍 '+a.addr:'');
+  if(sp)sp.innerHTML='<strong style="color:var(--text)">'+a.name+'</strong><br><br>'+(a.desc||'').replace(/\n/g,'<br>')+(a.addr?'<br><br>📍 '+a.addr:'');
   var ct=document.getElementById('contactInfo');
   if(ct)ct.innerHTML='Телефон: <strong style="color:var(--text)">'+(a.phone||'8 925 079-08-61')+'</strong><br>Запись: через приложение или в Telegram';
   var sched=getSchedule();
-  var schedHtml='';
-  [1,2,3,4,5,6,0].forEach(function(d){var s=sched[d];schedHtml+='<div class="schedule-row"><span class="sch-day">'+s.label+'</span><span class="sch-time" style="color:'+(s.on?'var(--text)':'var(--muted)')+'">'+(s.on?s.from+' — '+s.to:'выходной')+'</span></div>';});
-  document.getElementById('scheduleInfo').innerHTML=schedHtml;
-  var svcs=getServices();
-  document.getElementById('servicesList').innerHTML=svcs.map(function(sv){return'<div class="schedule-row"><span class="sch-day" style="font-size:13px">'+sv.name+'</span><span style="font-size:12px;color:var(--gold);font-weight:700">'+sv.price+' ₽ / '+sv.dur+' мин</span></div>';}).join('');
+  var sh='';[1,2,3,4,5,6,0].forEach(function(d){var s=sched[d];sh+='<div class="schedule-row"><span class="sch-day">'+s.label+'</span><span class="sch-time" style="color:'+(s.on?'var(--text)':'var(--muted)')+'">'+(s.on?s.from+' — '+s.to:'выходной')+'</span></div>';});
+  document.getElementById('scheduleInfo').innerHTML=sh;
+  document.getElementById('servicesList').innerHTML=getServices().filter(function(sv){return sv.active!==false}).map(function(sv){return'<div class="schedule-row"><span class="sch-day" style="font-size:13px">'+sv.name+'</span><span style="font-size:12px;color:var(--gold);font-weight:700">'+sv.price+' ₽ / '+sv.dur+' мин</span></div>';}).join('');
 }
 
+// SUCCESS TEXT
+function applySuccessText(){
+  var s=getSuccessText();
+  var t=document.getElementById('successTitle');
+  var tx=document.getElementById('successText');
+  if(t)t.textContent=s.title;
+  if(tx)tx.innerHTML=(s.text||'').replace(/\n/g,'<br>');
+}
+function saveSuccessText(){
+  var s={title:document.getElementById('editSuccessTitle').value.trim()||'Запись принята!',text:document.getElementById('editSuccessText').value.trim()};
+  ss('veltis_success',s);
+  if(window.fbSave)window.fbSave('success_text',s).catch(function(){});
+  applySuccessText();alert('Сохранено!');
+}
+function loadSuccessEditor(){
+  var s=getSuccessText();
+  var t=document.getElementById('editSuccessTitle');var tx=document.getElementById('editSuccessText');
+  if(t)t.value=s.title;if(tx)tx.value=s.text;
+}
+
+// ADMIN
 function checkAdmin(){
-  var pass=document.getElementById('adminPass').value;
-  if(pass===ADMIN_PASS){
+  if(document.getElementById('adminPass').value===ADMIN_PASS){
     adminUnlocked=true;
     document.getElementById('adminLock').style.display='none';
     document.getElementById('adminPanel').style.display='block';
-    loadAboutEditor();renderPriceEditor();renderScheduleEditor();renderAdminBookings();renderBlockedDates();
+    renderAdmin();
   }else{
     document.getElementById('lockErr').textContent='Неверный пароль';
     setTimeout(function(){document.getElementById('lockErr').textContent=''},2000);
@@ -574,65 +815,104 @@ function lockAdmin(){
   document.getElementById('adminPanel').style.display='none';
 }
 function renderAdmin(){
-  if(adminUnlocked){
-    loadAboutEditor();loadSuccessEditor();renderPriceEditor();renderScheduleEditor();renderBlockedDates();renderSpecialistsEditor();renderLocationsEditor();
-    if(window.fbReloadBookings){
-      window.fbReloadBookings();
-    } else {
-      renderAdminBookings();
-    }
+  if(!adminUnlocked)return;
+  renderStats();
+  renderAdminBookings();
+  renderSpecialistsEditor();
+  renderLocationsEditor();
+  renderPriceEditor();
+  loadAboutEditor();
+  loadSuccessEditor();
+  renderScheduleEditor();
+  renderBlockedDates();
+}
+
+// STATS
+function renderStats(){
+  var bookings=getBookings();
+  var today=new Date().toISOString().slice(0,10);
+  var thisMonth=today.slice(0,7);
+  var upcoming=bookings.filter(function(b){return b.date>=today&&b.status!=='cancelled'}).length;
+  var monthTotal=bookings.filter(function(b){return b.date.slice(0,7)===thisMonth&&b.status!=='cancelled'}).length;
+  var monthRevenue=bookings.filter(function(b){return b.date.slice(0,7)===thisMonth&&b.status!=='cancelled'}).reduce(function(sum,b){return sum+(parseInt(b.price)||0)},0);
+  var allTime=bookings.filter(function(b){return b.status!=='cancelled'}).length;
+  document.getElementById('statsGrid').innerHTML=
+    '<div class="stat-card"><div class="stat-num">'+upcoming+'</div><div class="stat-label">Предстоящих</div></div>'+
+    '<div class="stat-card"><div class="stat-num">'+monthTotal+'</div><div class="stat-label">В этом месяце</div></div>'+
+    '<div class="stat-card"><div class="stat-num">'+monthRevenue.toLocaleString('ru')+'</div><div class="stat-label">Выручка мес. ₽</div></div>'+
+    '<div class="stat-card"><div class="stat-num">'+allTime+'</div><div class="stat-label">Всего сеансов</div></div>';
+}
+
+// FILTER
+function setFilter(f){
+  activeFilter=f;
+  document.querySelectorAll('.filter-btn').forEach(function(btn){btn.classList.remove('on')});
+  event.currentTarget.classList.add('on');
+  renderAdminBookings();
+}
+
+// ADMIN BOOKINGS
+function renderAdminBookings(){
+  var bookings=getBookings();
+  var today=new Date().toISOString().slice(0,10);
+  var filtered;
+  if(activeFilter==='upcoming') filtered=bookings.filter(function(b){return b.date>=today&&b.status!=='cancelled'});
+  else if(activeFilter==='new') filtered=bookings.filter(function(b){return b.status==='new'});
+  else if(activeFilter==='confirmed') filtered=bookings.filter(function(b){return b.status==='confirmed'});
+  else if(activeFilter==='cancelled') filtered=bookings.filter(function(b){return b.status==='cancelled'});
+  else filtered=bookings;
+  filtered.sort(function(a,b){return a.date>b.date?1:a.date<b.date?-1:a.time>b.time?1:-1});
+  var dayNames=['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+  var statusMap={new:'Новая',confirmed:'Подтверждена',cancelled:'Отменена',rescheduled:'Перенос'};
+  if(!filtered.length){document.getElementById('adminBookings').innerHTML='<div class="empty-state" style="text-align:center;padding:30px;color:var(--muted)">Нет записей</div>';return;}
+  document.getElementById('adminBookings').innerHTML=filtered.map(function(b){
+    var d=new Date(b.date);
+    var sc=b.status||'new';
+    return'<div class="booking-item">'+
+      '<div class="bi-header">'+
+        '<div class="bi-name">'+b.name+'</div>'+
+        '<span class="bi-status-badge '+sc+'">'+(statusMap[sc]||sc)+'</span>'+
+      '</div>'+
+      '<div class="bi-detail">'+dayNames[d.getDay()]+' '+d.getDate()+' '+MONTHS[d.getMonth()].slice(0,3)+' · '+b.time+'</div>'+
+      '<div class="bi-detail">'+b.service+' · '+b.price+' ₽</div>'+
+      '<div class="bi-detail">📞 '+b.phone+(b.tgUsername?' · @'+b.tgUsername:'')+'</div>'+
+      (b.location?'<div class="bi-detail">'+b.specialist+' · '+b.location+'</div>':'')+
+      (b.comment?'<div class="bi-detail" style="color:var(--text)">'+b.comment+'</div>':'')+
+      (b.rescheduledTo?'<div class="bi-detail" style="color:var(--blue)">Хочет перенести на: '+b.rescheduledTo.date+' '+b.rescheduledTo.time+'</div>':'')+
+      '<div class="bi-actions">'+
+        (sc!=='confirmed'&&sc!=='cancelled'?'<button class="bi-act bi-confirm" onclick="confirmBooking('+b.id+')">Подтвердить</button>':'')+
+        (sc!=='cancelled'?'<button class="bi-act bi-cancel-btn" onclick="cancelBookingAdmin('+b.id+')">Отменить</button>':'')+
+      '</div>'+
+      '</div>';
+  }).join('');
+}
+
+function confirmBooking(id){
+  var bookings=getBookings();
+  var b=bookings.find(function(b){return b.id===id});
+  if(!b)return;
+  b.status='confirmed';
+  setBookings(bookings);
+  if(window.fbSave)window.fbSave('bookings/'+id+'/status','confirmed').catch(function(){});
+  // Уведомление клиенту если есть username
+  if(b.tgUsername){
+    sendTgNotify('@'+b.tgUsername+' ваша запись на массаж подтверждена!\n'+b.date+' в '+b.time+'\n'+b.service+'\n'+b.specialist);
   }
+  renderAdminBookings();renderStats();renderCal();
 }
 
-function getSuccessText(){
-  try{return JSON.parse(localStorage.getItem('veltis_success')||'null')||{title:'Запись принята!',text:'Александр свяжется для подтверждения.\nОбычно в течение 1-2 часов.'};}
-  catch(e){return{title:'Запись принята!',text:'Александр свяжется для подтверждения.\nОбычно в течение 1-2 часов.'};}
-}
-function applySuccessText(){
-  var s=getSuccessText();
-  var t=document.getElementById('successTitle');
-  var tx=document.getElementById('successText');
-  if(t)t.textContent=s.title;
-  if(tx)tx.innerHTML=s.text.replace(/\n/g,'<br>');
-}
-function saveSuccessText(){
-  var s={
-    title:document.getElementById('editSuccessTitle').value.trim()||'Запись принята!',
-    text:document.getElementById('editSuccessText').value.trim()
-  };
-  localStorage.setItem('veltis_success',JSON.stringify(s));
-  if(window.fbSave)window.fbSave('success_text',s).catch(function(){});
-  applySuccessText();
-  alert('Сохранено!');
-}
-function loadSuccessEditor(){
-  var s=getSuccessText();
-  var t=document.getElementById('editSuccessTitle');
-  var tx=document.getElementById('editSuccessText');
-  if(t)t.value=s.title;
-  if(tx)tx.value=s.text;
+function cancelBookingAdmin(id){
+  if(!confirm('Отменить запись?'))return;
+  var bookings=getBookings();
+  var b=bookings.find(function(b){return b.id===id});
+  if(!b)return;
+  b.status='cancelled';
+  setBookings(bookings);
+  if(window.fbSave)window.fbSave('bookings/'+id+'/status','cancelled').catch(function(){});
+  renderAdminBookings();renderStats();renderCal();
 }
 
-function loadAboutEditor(){
-  var a=getAbout();
-  var n=document.getElementById('editName');var d=document.getElementById('editDesc');
-  var ad=document.getElementById('editAddr');var ph=document.getElementById('editPhone');
-  if(n)n.value=a.name||'';if(d)d.value=a.desc||'';if(ad)ad.value=a.addr||'';if(ph)ph.value=a.phone||'';
-}
-
-function saveAbout(){
-  var about={
-    name:document.getElementById('editName').value.trim()||'Ширяев Александр',
-    desc:document.getElementById('editDesc').value.trim(),
-    addr:document.getElementById('editAddr').value.trim(),
-    phone:document.getElementById('editPhone').value.trim()
-  };
-  localStorage.setItem('veltis_about',JSON.stringify(about));
-  if(window.fbSave)window.fbSave('about',about).catch(function(){});
-  alert('Сохранено!');renderInfo();
-}
-
-
+// SPECIALISTS
 function renderSpecialistsEditor(){
   var specs=getSpecialists();
   document.getElementById('specialistsEditor').innerHTML=specs.map(function(sp,i){
@@ -641,24 +921,11 @@ function renderSpecialistsEditor(){
       '<div style="display:flex;gap:6px;align-items:center">'+
         '<button class="toggle '+(sp.active?'on':'off')+'" onclick="toggleSpecialist('+i+')"></button>'+
         '<button onclick="removeSpecialist('+i+')" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;padding:2px 6px">✕</button>'+
-      '</div>'+
-      '</div>';
+      '</div></div>';
   }).join('');
 }
-
-function toggleSpecialist(i){
-  var specs=getSpecialists();specs[i].active=!specs[i].active;
-  setSpecialists(specs);if(window.fbSave)window.fbSave('specialists',specs).catch(function(){});
-  renderSpecialistsEditor();updateSpecialistSelect();
-}
-
-function removeSpecialist(i){
-  if(!confirm('Удалить специалиста?'))return;
-  var specs=getSpecialists();specs.splice(i,1);
-  setSpecialists(specs);if(window.fbSave)window.fbSave('specialists',specs).catch(function(){});
-  renderSpecialistsEditor();updateSpecialistSelect();
-}
-
+function toggleSpecialist(i){var specs=getSpecialists();specs[i].active=!specs[i].active;setSpecialists(specs);if(window.fbSave)window.fbSave('specialists',specs).catch(function(){});renderSpecialistsEditor();updateSpecialistSelect();}
+function removeSpecialist(i){if(!confirm('Удалить?'))return;var specs=getSpecialists();specs.splice(i,1);setSpecialists(specs);if(window.fbSave)window.fbSave('specialists',specs).catch(function(){});renderSpecialistsEditor();updateSpecialistSelect();}
 function addSpecialist(){
   var name=document.getElementById('newSpecName').value.trim();
   var role=document.getElementById('newSpecRole').value.trim();
@@ -670,35 +937,20 @@ function addSpecialist(){
   renderSpecialistsEditor();updateSpecialistSelect();
 }
 
+// LOCATIONS
 function renderLocationsEditor(){
   var locs=getLocations();
   document.getElementById('locationsEditor').innerHTML=locs.map(function(loc,i){
     return'<div class="schedule-row" style="flex-wrap:wrap;gap:4px">'+
-      '<div style="flex:1;min-width:200px">'+
-        '<div style="font-size:12px;font-weight:700">'+loc.name+'</div>'+
-        '<div style="font-size:11px;color:var(--muted)">'+( loc.address||'')+'</div>'+
-      '</div>'+
+      '<div style="flex:1;min-width:180px"><div style="font-size:12px;font-weight:700">'+loc.name+'</div><div style="font-size:11px;color:var(--muted)">'+(loc.address||'')+'</div></div>'+
       '<div style="display:flex;gap:6px;align-items:center">'+
         '<button class="toggle '+(loc.active?'on':'off')+'" onclick="toggleLocation('+i+')"></button>'+
         '<button onclick="removeLocation('+i+')" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;padding:2px 6px">✕</button>'+
-      '</div>'+
-      '</div>';
+      '</div></div>';
   }).join('');
 }
-
-function toggleLocation(i){
-  var locs=getLocations();locs[i].active=!locs[i].active;
-  setLocations(locs);if(window.fbSave)window.fbSave('locations',locs).catch(function(){});
-  renderLocationsEditor();updateLocationSelect();
-}
-
-function removeLocation(i){
-  if(!confirm('Удалить локацию?'))return;
-  var locs=getLocations();locs.splice(i,1);
-  setLocations(locs);if(window.fbSave)window.fbSave('locations',locs).catch(function(){});
-  renderLocationsEditor();updateLocationSelect();
-}
-
+function toggleLocation(i){var locs=getLocations();locs[i].active=!locs[i].active;setLocations(locs);if(window.fbSave)window.fbSave('locations',locs).catch(function(){});renderLocationsEditor();updateLocationSelect();}
+function removeLocation(i){if(!confirm('Удалить?'))return;var locs=getLocations();locs.splice(i,1);setLocations(locs);if(window.fbSave)window.fbSave('locations',locs).catch(function(){});renderLocationsEditor();updateLocationSelect();}
 function addLocation(){
   var name=document.getElementById('newLocName').value.trim();
   var addr=document.getElementById('newLocAddr').value.trim();
@@ -710,6 +962,7 @@ function addLocation(){
   renderLocationsEditor();updateLocationSelect();
 }
 
+// PRICE EDITOR
 function renderPriceEditor(){
   var svcs=getServices();
   document.getElementById('priceEditor').innerHTML=svcs.map(function(sv,i){
@@ -728,46 +981,28 @@ function renderPriceEditor(){
   '<div style="margin-top:12px;border-top:1px solid var(--border);padding-top:12px">'+
     '<div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px">Добавить услугу</div>'+
     '<div style="display:flex;gap:6px;flex-wrap:wrap">'+
-      '<input type="text" id="newSvcName" placeholder="Название" style="flex:2;min-width:130px;padding:8px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;font-family:inherit;outline:none">'+
-      '<input type="number" id="newSvcPrice" placeholder="Цена" style="width:80px;padding:8px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;font-family:inherit;outline:none">'+
-      '<input type="number" id="newSvcDur" placeholder="Мин" style="width:65px;padding:8px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;font-family:inherit;outline:none">'+
+      '<input type="text" id="newSvcName" placeholder="Название" style="flex:2;min-width:120px;padding:8px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;font-family:inherit;outline:none">'+
+      '<input type="number" id="newSvcPrice" placeholder="Цена" style="width:75px;padding:8px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;font-family:inherit;outline:none">'+
+      '<input type="number" id="newSvcDur" placeholder="Мин" style="width:62px;padding:8px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;font-family:inherit;outline:none">'+
       '<button onclick="addService()" style="padding:8px 14px;border-radius:10px;background:var(--gold);border:none;color:#0a0d14;font-weight:700;cursor:pointer;font-size:14px">+</button>'+
     '</div>'+
   '</div>';
 }
-
-function toggleService(i){
-  var svcs=getServices();
-  svcs[i].active=svcs[i].active===false?true:false;
-  setServices(svcs);SERVICES=svcs;
-  if(window.fbSave)window.fbSave('services',svcs).catch(function(){});
-  renderPriceEditor();updateServiceSelect();renderInfo();
-}
-
-function removeService(i){
-  if(!confirm('Удалить услугу?'))return;
-  var svcs=getServices();svcs.splice(i,1);
-  setServices(svcs);SERVICES=svcs;
-  if(window.fbSave)window.fbSave('services',svcs).catch(function(){});
-  renderPriceEditor();updateServiceSelect();renderInfo();
-}
-
+function toggleService(i){var svcs=getServices();svcs[i].active=svcs[i].active===false?true:false;setServices(svcs);SERVICES=svcs;if(window.fbSave)window.fbSave('services',svcs).catch(function(){});renderPriceEditor();updateServiceSelect();renderInfo();}
+function removeService(i){if(!confirm('Удалить услугу?'))return;var svcs=getServices();svcs.splice(i,1);setServices(svcs);SERVICES=svcs;if(window.fbSave)window.fbSave('services',svcs).catch(function(){});renderPriceEditor();updateServiceSelect();renderInfo();}
 function addService(){
   var name=document.getElementById('newSvcName').value.trim();
   var price=parseInt(document.getElementById('newSvcPrice').value)||0;
   var dur=parseInt(document.getElementById('newSvcDur').value)||30;
-  if(!name){alert('Введите название услуги');return}
+  if(!name){alert('Введите название');return}
   if(!price){alert('Введите цену');return}
   var svcs=getServices();
   svcs.push({id:'svc_'+Date.now(),name:name,price:price,dur:dur,active:true});
   setServices(svcs);SERVICES=svcs;
   if(window.fbSave)window.fbSave('services',svcs).catch(function(){});
-  document.getElementById('newSvcName').value='';
-  document.getElementById('newSvcPrice').value='';
-  document.getElementById('newSvcDur').value='';
+  document.getElementById('newSvcName').value='';document.getElementById('newSvcPrice').value='';document.getElementById('newSvcDur').value='';
   renderPriceEditor();updateServiceSelect();renderInfo();
 }
-
 function savePrices(){
   var svcs=getServices();
   svcs.forEach(function(sv,i){
@@ -775,74 +1010,47 @@ function savePrices(){
     if(p&&!p.disabled)sv.price=parseInt(p.value)||sv.price;
     if(d&&!d.disabled)sv.dur=parseInt(d.value)||sv.dur;
   });
-  setServices(svcs);
-  if(window.fbSave)window.fbSave('services',svcs).catch(function(){});
+  setServices(svcs);if(window.fbSave)window.fbSave('services',svcs).catch(function(){});
   SERVICES=svcs;updateServiceSelect();renderInfo();alert('Прайс сохранён!');
 }
 
+// ABOUT
+function loadAboutEditor(){
+  var a=getAbout();
+  ['editName','editDesc','editAddr','editPhone'].forEach(function(id,i){
+    var el=document.getElementById(id);
+    if(el)el.value=[a.name,a.desc,a.addr,a.phone][i]||'';
+  });
+}
+function saveAbout(){
+  var about={name:document.getElementById('editName').value.trim()||'Ширяев Александр',desc:document.getElementById('editDesc').value.trim(),addr:document.getElementById('editAddr').value.trim(),phone:document.getElementById('editPhone').value.trim()};
+  ss('veltis_about',about);if(window.fbSave)window.fbSave('about',about).catch(function(){});
+  alert('Сохранено!');renderInfo();
+}
+
+// SCHEDULE
 function renderScheduleEditor(){
-  var sched=getSchedule();
-  var html='';
+  var sched=getSchedule();var html='';
   [1,2,3,4,5,6,0].forEach(function(d){
     var s=sched[d];
     html+='<div class="schedule-row">'+
       '<span class="sch-day">'+s.label+'</span>'+
-      '<span class="sch-time">'+
-        '<input class="time-input" id="from_'+d+'" value="'+s.from+'" type="time"> — '+
-        '<input class="time-input" id="to_'+d+'" value="'+s.to+'" type="time">'+
-      '</span>'+
+      '<span class="sch-time"><input class="time-input" id="from_'+d+'" value="'+s.from+'" type="time"> — <input class="time-input" id="to_'+d+'" value="'+s.to+'" type="time"></span>'+
       '<button class="toggle '+(s.on?'on':'off')+'" id="tog_'+d+'" onclick="toggleDay('+d+')"></button>'+
       '</div>';
   });
   document.getElementById('scheduleEditor').innerHTML=html;
 }
-
 function toggleDay(d){var sched=getSchedule();sched[d].on=!sched[d].on;setSchedule(sched);renderScheduleEditor();}
-
 function saveSchedule(){
   var sched=getSchedule();
-  [0,1,2,3,4,5,6].forEach(function(d){
-    var f=document.getElementById('from_'+d);var t=document.getElementById('to_'+d);
-    if(f&&t){sched[d].from=f.value;sched[d].to=t.value;}
-  });
+  [0,1,2,3,4,5,6].forEach(function(d){var f=document.getElementById('from_'+d);var t=document.getElementById('to_'+d);if(f&&t){sched[d].from=f.value;sched[d].to=t.value;}});
   setSchedule(sched);
-  if(window.fbSave){
-    window.fbSave('schedule',sched).then(function(){renderCal();alert('Расписание сохранено!');}).catch(function(){renderCal();alert('Сохранено локально!');});
-  }else{renderCal();alert('Расписание сохранено!');}
+  if(window.fbSave){window.fbSave('schedule',sched).then(function(){renderCal();alert('Расписание сохранено!');}).catch(function(){renderCal();alert('Сохранено локально!');});}
+  else{renderCal();alert('Расписание сохранено!');}
 }
 
-function renderAdminBookings(){
-  var bookings=getBookings().filter(function(b){return b.status!=='cancelled'});
-  bookings.sort(function(a,b){return a.date>b.date?1:a.date<b.date?-1:a.time>b.time?1:-1});
-  var today=new Date().toISOString().slice(0,10);
-  var upcoming=bookings.filter(function(b){return b.date>=today});
-  if(!upcoming.length){document.getElementById('adminBookings').innerHTML='<div class="empty-state">Записей пока нет</div>';return;}
-  var dayNames=['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
-  document.getElementById('adminBookings').innerHTML=upcoming.map(function(b){
-    var d=new Date(b.date);
-    return'<div class="booking-item">'+
-      '<div class="bi-info">'+
-        '<div class="bi-name">'+b.name+'</div>'+
-        '<div class="bi-detail">'+dayNames[d.getDay()]+' '+d.getDate()+' '+MONTHS[d.getMonth()].slice(0,3)+' · '+b.time+' · '+b.service+' · '+b.price+' ₽</div>'+
-        '<div class="bi-detail">📞 '+b.phone+(b.comment?' · '+b.comment:'')+'</div>'+
-      '</div>'+
-      '<button class="bi-cancel" onclick="cancelBooking('+b.id+')">✕</button>'+
-      '</div>';
-  }).join('');
-}
-
-function cancelBooking(id){
-  if(!confirm('Отменить запись?'))return;
-  if(window.fbSave){
-    window.fbSave('bookings/'+id+'/status','cancelled').then(function(){
-      if(window.fbReloadBookings) window.fbReloadBookings();
-    }).catch(function(){});
-  }
-  var bookings=getBookings();
-  bookings.forEach(function(b){if(b.id===id)b.status='cancelled'});
-  setBookings(bookings);renderAdminBookings();renderCal();
-}
-
+// BLOCKED DATES
 function blockDate(){
   var date=document.getElementById('blockDate').value;
   if(!date){alert('Выберите дату');return}
@@ -851,13 +1059,11 @@ function blockDate(){
   if(window.fbSave)window.fbSave('blocked',blocked).catch(function(){});
   renderBlockedDates();renderCal();
 }
-
 function unblockDate(date){
   var blocked=getBlocked();delete blocked[date];setBlocked(blocked);
   if(window.fbSave)window.fbSave('blocked',blocked).catch(function(){});
   renderBlockedDates();renderCal();
 }
-
 function renderBlockedDates(){
   var blocked=getBlocked();var keys=Object.keys(blocked).sort();
   if(!keys.length){document.getElementById('blockedList').innerHTML='';return}
@@ -869,8 +1075,20 @@ function renderBlockedDates(){
   }).join('');
 }
 
+// FIREBASE RELOAD
+window.fbReloadBookings = function(){
+  if(!window.fbGet)return;
+  window.fbGet('bookings').then(function(data){
+    if(data){
+      var arr=typeof data==='object'&&!Array.isArray(data)?Object.values(data):data;
+      ss('veltis_bookings',arr);
+    }else{ss('veltis_bookings',[]);}
+    renderAdminBookings();renderStats();renderCal();
+  }).catch(function(){});
+};
+
 // INIT
-updateServiceSelect();
+updateServiceSelect();updateSpecialistSelect();updateLocationSelect();
 applySuccessText();
 renderCal();
 </script>
@@ -879,77 +1097,49 @@ renderCal();
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-var cfg = {
-  apiKey: "AIzaSyDGePZLwEPJMuQ2xm7-Nzk9_aSFJPWYCEo",
-  authDomain: "veltis-booking.firebaseapp.com",
-  databaseURL: "https://veltis-booking-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "veltis-booking",
-  storageBucket: "veltis-booking.firebasestorage.app",
-  messagingSenderId: "12324846376",
-  appId: "1:12324846376:web:7e33af54316cab40caae1d"
+var cfg={
+  apiKey:"AIzaSyDGePZLwEPJMuQ2xm7-Nzk9_aSFJPWYCEo",
+  authDomain:"veltis-booking.firebaseapp.com",
+  databaseURL:"https://veltis-booking-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:"veltis-booking",
+  storageBucket:"veltis-booking.firebasestorage.app",
+  messagingSenderId:"12324846376",
+  appId:"1:12324846376:web:7e33af54316cab40caae1d"
 };
+var fbapp=initializeApp(cfg);
+var db=getDatabase(fbapp);
 
-var fbapp = initializeApp(cfg);
-var db = getDatabase(fbapp);
-
-window.fbSave = function(path, data) {
-  return set(ref(db, path), data);
-};
+window.fbSave=function(path,data){return set(ref(db,path),data);};
+window.fbGet=function(path){return get(ref(db,path)).then(function(snap){return snap.exists()?snap.val():null;});};
 
 Promise.all([
-  get(ref(db,'schedule')),
-  get(ref(db,'bookings')),
-  get(ref(db,'blocked')),
-  get(ref(db,'about')),
-  get(ref(db,'services')),
-  get(ref(db,'specialists')),
-  get(ref(db,'locations')),
-  get(ref(db,'success_text'))
-]).then(function(snaps) {
-  if(snaps[0].exists()) localStorage.setItem('veltis_schedule', JSON.stringify(snaps[0].val()));
-  if(snaps[1].exists()) localStorage.setItem('veltis_bookings', JSON.stringify(Object.values(snaps[1].val())));
-  if(snaps[2].exists()) localStorage.setItem('veltis_blocked', JSON.stringify(snaps[2].val()));
-  if(snaps[3].exists()) localStorage.setItem('veltis_about', JSON.stringify(snaps[3].val()));
-  if(snaps[4].exists()) localStorage.setItem('veltis_services', JSON.stringify(snaps[4].val()));
-  if(snaps[5].exists()) localStorage.setItem('veltis_specialists', JSON.stringify(Object.values(snaps[5].val())));
-  if(snaps[6].exists()) localStorage.setItem('veltis_locations', JSON.stringify(Object.values(snaps[6].val())));
-  if(snaps[7].exists()) localStorage.setItem('veltis_success', JSON.stringify(snaps[7].val()));
-  applySuccessText();
-  renderCal();
-}).catch(function() { renderCal(); });
+  get(ref(db,'schedule')),get(ref(db,'bookings')),get(ref(db,'blocked')),
+  get(ref(db,'about')),get(ref(db,'services')),get(ref(db,'specialists')),
+  get(ref(db,'locations')),get(ref(db,'success_text'))
+]).then(function(snaps){
+  if(snaps[0].exists())localStorage.setItem('veltis_schedule',JSON.stringify(snaps[0].val()));
+  if(snaps[1].exists())localStorage.setItem('veltis_bookings',JSON.stringify(Object.values(snaps[1].val())));
+  if(snaps[2].exists())localStorage.setItem('veltis_blocked',JSON.stringify(snaps[2].val()));
+  if(snaps[3].exists())localStorage.setItem('veltis_about',JSON.stringify(snaps[3].val()));
+  if(snaps[4].exists())localStorage.setItem('veltis_services',JSON.stringify(snaps[4].val()));
+  if(snaps[5].exists())localStorage.setItem('veltis_specialists',JSON.stringify(Object.values(snaps[5].val())));
+  if(snaps[6].exists())localStorage.setItem('veltis_locations',JSON.stringify(Object.values(snaps[6].val())));
+  if(snaps[7].exists())localStorage.setItem('veltis_success',JSON.stringify(snaps[7].val()));
+  applySuccessText();renderCal();
+}).catch(function(){renderCal();});
 
-onValue(ref(db,'schedule'), function(snap) {
-  if(snap.exists()) {
-    localStorage.setItem('veltis_schedule', JSON.stringify(snap.val()));
+onValue(ref(db,'schedule'),function(snap){
+  if(snap.exists()){localStorage.setItem('veltis_schedule',JSON.stringify(snap.val()));renderCal();}
+});
+onValue(ref(db,'bookings'),function(snap){
+  if(snap.exists()){
+    localStorage.setItem('veltis_bookings',JSON.stringify(Object.values(snap.val())));
     renderCal();
+    if(typeof renderAdminBookings==='function')renderAdminBookings();
+    if(typeof renderStats==='function')renderStats();
+    if(typeof renderMyBookings==='function'&&document.getElementById('view-mybooks').classList.contains('active'))renderMyBookings();
   }
 });
-
-onValue(ref(db,'bookings'), function(snap) {
-  if(snap.exists()) {
-    var arr = Object.values(snap.val());
-    localStorage.setItem('veltis_bookings', JSON.stringify(arr));
-    renderCal();
-    if(typeof renderAdminBookings==='function') renderAdminBookings();
-  } else {
-    localStorage.setItem('veltis_bookings', JSON.stringify([]));
-    if(typeof renderAdminBookings==='function') renderAdminBookings();
-  }
-});
-
-// Force reload bookings when admin panel opens
-window.fbReloadBookings = function() {
-  get(ref(db,'bookings')).then(function(snap) {
-    if(snap.exists()) {
-      var arr = Object.values(snap.val());
-      localStorage.setItem('veltis_bookings', JSON.stringify(arr));
-    } else {
-      localStorage.setItem('veltis_bookings', JSON.stringify([]));
-    }
-    if(typeof renderAdminBookings==='function') renderAdminBookings();
-  }).catch(function(e){ console.log('FB error:', e); });
-};
 </script>
-
 </body>
 </html>
