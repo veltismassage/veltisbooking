@@ -217,6 +217,10 @@ body{font-family:-apple-system,'Segoe UI',Arial,sans-serif;background:var(--bg);
     <button class="btn btn-gold" onclick="goView('mybooks')">Мои записи</button>
     <button class="btn btn-outline" onclick="newBooking()">Записаться ещё раз</button>
   </div>
+  <div style="text-align:center;padding:0 16px 24px">
+    <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Были у нас раньше? Будем рады отзыву:</div>
+    <button onclick="openReviews()" style="padding:10px 20px;border-radius:12px;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.3);color:var(--gold);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit">⭐ Оставить отзыв</button>
+  </div>
 </div>
 
 <!-- ═══ МОИ ЗАПИСИ ═══ -->
@@ -254,6 +258,11 @@ body{font-family:-apple-system,'Segoe UI',Arial,sans-serif;background:var(--bg);
     <div class="admin-card">
       <div class="admin-title">📞 Контакты</div>
       <p id="contactInfo" style="font-size:13px;color:var(--muted);line-height:1.8"></p>
+    </div>
+    <div class="admin-card" style="text-align:center">
+      <div class="admin-title">⭐ Отзывы клиентов</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:12px">Поделитесь впечатлением от сеанса — это помогает другим клиентам и мотивирует мастера</p>
+      <button onclick="openReviews()" style="padding:12px 24px;border-radius:12px;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.3);color:var(--gold);font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">⭐ Написать отзыв</button>
     </div>
   </div>
 </div>
@@ -356,7 +365,17 @@ body{font-family:-apple-system,'Segoe UI',Arial,sans-serif;background:var(--bg);
     <div class="admin-card">
       <div class="admin-title">⏰ Расписание</div>
       <div id="scheduleEditor"></div>
-      <button class="btn btn-gold" style="margin-top:12px" onclick="saveSchedule()">Сохранить расписание</button>
+      <div style="margin-top:12px;display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--border)">
+        <span style="font-size:12px;color:var(--muted);flex:1">Буфер между сеансами:</span>
+        <select id="bufferSelect" onchange="saveBuffer()" style="padding:8px;border-radius:10px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-size:13px;font-family:inherit;outline:none">
+          <option value="0">Без буфера</option>
+          <option value="15">15 минут</option>
+          <option value="30" selected>30 минут</option>
+          <option value="60">1 час</option>
+          <option value="90">1.5 часа</option>
+        </select>
+      </div>
+      <button class="btn btn-gold" style="margin-top:8px" onclick="saveSchedule()">Сохранить расписание</button>
     </div>
 
     <!-- БЛОКИРОВКА ДАТ -->
@@ -526,11 +545,18 @@ function renderCal(){
   }
 }
 
+function getBuffer(){
+  try{return parseInt(localStorage.getItem('veltis_buffer')||'30');}catch(e){return 30;}
+}
+
 function getDaySlots(dateStr,dow){
   var sched=getSchedule();var day=sched[dow];
   if(!day||!day.on)return[];
   var slots=[],from=timeToMins(day.from),to=timeToMins(day.to);
-  for(var m=from;m+60<=to;m+=60)slots.push(minsToTime(m));
+  var buf=getBuffer();
+  // Шаг = 60 мин сеанс + буфер
+  var step=60+buf;
+  for(var m=from;m+60<=to;m+=step)slots.push(minsToTime(m));
   return slots;
 }
 function timeToMins(t){var p=t.split(':');return parseInt(p[0])*60+parseInt(p[1])}
@@ -739,7 +765,11 @@ function showMyBookings(phone){
           '<div class="mb-actions">'+
             '<button class="mb-btn mb-btn-cancel" onclick="clientCancel('+b.id+')">Отменить</button>'+
             '<button class="mb-btn mb-btn-reschedule" onclick="openReschedule('+b.id+')">Перенести</button>'+
-          '</div>':'')+
+          '</div>':
+          (!isFuture&&b.status!=='cancelled'?
+          '<div class="mb-actions">'+
+            '<button class="mb-btn" onclick="openReviews()" style="background:rgba(201,168,76,0.1);color:var(--gold);border:1px solid rgba(201,168,76,0.3)">⭐ Оставить отзыв</button>'+
+          '</div>':''))+
         '</div>';
     }).join('')+
     '<div style="padding:12px 0;text-align:center"><button onclick="ss(\'veltis_myphone\',\'\');renderMyBookings()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px">Другой номер</button></div>';
@@ -818,6 +848,8 @@ function renderInfo(){
 }
 
 // SUCCESS TEXT
+function openReviews(){window.open('https://t.me/+B2QsqgVweYM0NDU6','_blank');}
+
 function applyHeader(){
   var a=getAbout();
   var logoImg=document.getElementById('headerLogoImg');
@@ -906,6 +938,7 @@ function renderAdmin(){
   loadSuccessEditor();
   renderScheduleEditor();
   renderBlockedDates();
+  loadBufferSelect();
 }
 
 // STATS
@@ -1134,6 +1167,15 @@ function renderScheduleEditor(){
   document.getElementById('scheduleEditor').innerHTML=html;
 }
 function toggleDay(d){var sched=getSchedule();sched[d].on=!sched[d].on;setSchedule(sched);renderScheduleEditor();}
+function saveBuffer(){
+  var sel=document.getElementById('bufferSelect');
+  if(sel)localStorage.setItem('veltis_buffer',sel.value);
+  renderCal();
+}
+function loadBufferSelect(){
+  var sel=document.getElementById('bufferSelect');
+  if(sel)sel.value=getBuffer();
+}
 function saveSchedule(){
   var sched=getSchedule();
   [0,1,2,3,4,5,6].forEach(function(d){var f=document.getElementById('from_'+d);var t=document.getElementById('to_'+d);if(f&&t){sched[d].from=f.value;sched[d].to=t.value;}});
