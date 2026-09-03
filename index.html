@@ -192,7 +192,7 @@ body{font-family:-apple-system,'Segoe UI',Arial,sans-serif;background:var(--bg);
     <div class="booking-summary" id="bookingSummary"></div>
     <div class="form-card">
       <div class="fg"><label>Ваше имя</label><input type="text" id="clientName" placeholder="Как вас зовут?"></div>
-      <div class="fg"><label>Телефон</label><input type="tel" id="clientPhone" placeholder="+7 ___ ___ __ __"></div>
+      <div class="fg"><label>Телефон</label><input type="tel" id="clientPhone" placeholder="+7 (___) ___-__-__" maxlength="18" oninput="formatPhone(this)" onkeydown="phoneKeydown(event,this)"></div>
       <div class="fg"><label>Комментарий</label><textarea id="clientComment" placeholder="Что беспокоит, пожелания..."></textarea></div>
     </div>
     <div class="btn-wrap">
@@ -598,6 +598,25 @@ function renderSummary(){
 document.addEventListener('change',function(e){if(['serviceSelect','specialistSelect','locationSelect'].indexOf(e.target.id)>=0)renderSummary();});
 
 // SUBMIT BOOKING
+
+function formatPhone(input){
+  var val=input.value.replace(/\D/g,'');
+  if(val.startsWith('8'))val='7'+val.slice(1);
+  if(!val.startsWith('7')&&val.length>0)val='7'+val;
+  var result='';
+  if(val.length>0)result='+7';
+  if(val.length>1)result+=' ('+val.slice(1,4);
+  if(val.length>=4)result+=') '+val.slice(4,7);
+  if(val.length>=7)result+='-'+val.slice(7,9);
+  if(val.length>=9)result+='-'+val.slice(9,11);
+  input.value=result;
+}
+function phoneKeydown(e,input){
+  if(e.key==='Backspace'&&input.value.length<=3){
+    e.preventDefault();input.value='';
+  }
+}
+
 function submitBooking(){
   var name=document.getElementById('clientName').value.trim();
   var phone=document.getElementById('clientPhone').value.trim();
@@ -669,7 +688,12 @@ function searchByPhone(){
 }
 
 function showMyBookings(phone){
-  var bookings=getBookings().filter(function(b){return b.phone===phone||b.phone.replace(/\D/g,'')===phone.replace(/\D/g,'')});
+  var allBookings=getBookings();
+  // Дедупликация по id
+  var seen={};
+  var bookings=[];
+  allBookings.forEach(function(b){if(!seen[b.id]){seen[b.id]=true;bookings.push(b);}});
+  bookings=bookings.filter(function(b){return b.phone===phone||b.phone.replace(/\D/g,'')===phone.replace(/\D/g,'');});
   var cont=document.getElementById('mybooksContent');
   if(!bookings.length){
     cont.innerHTML='<div style="text-align:center;padding:30px;color:var(--muted)">Записей с этим номером не найдено</div>'+
@@ -677,12 +701,13 @@ function showMyBookings(phone){
     return;
   }
   bookings.sort(function(a,b){return b.date>a.date?1:b.date<a.date?-1:0});
-  var today=new Date().toISOString().slice(0,10);
+  var _tn=new Date();
+  var today=_tn.getFullYear()+'-'+String(_tn.getMonth()+1).padStart(2,'0')+'-'+String(_tn.getDate()).padStart(2,'0');
   cont.innerHTML='<div style="font-size:11px;color:var(--muted);margin-bottom:12px;font-weight:700">Найдено записей: '+bookings.length+'</div>'+
     bookings.map(function(b){
       var d=new Date(b.date);
       var dayNames=['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
-      var isFuture=b.date>=today;
+      var isFuture=b.date>=today; // включает сегодня
       var statusMap={new:'Ожидает',confirmed:'Подтверждена',cancelled:'Отменена',rescheduled:'Перенесена'};
       var statusCls=b.status||'new';
       return'<div class="my-booking-card">'+
